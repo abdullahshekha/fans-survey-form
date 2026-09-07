@@ -19,3 +19,6 @@ supabase/.temp/
 # Editor / OS
 .DS_Store
 *.log
+
+# Git worktrees
+.worktrees/
