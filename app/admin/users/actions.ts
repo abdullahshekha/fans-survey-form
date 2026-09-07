@@ -43,16 +43,7 @@ export async function setRepActive(repId: string, active: boolean): Promise<void
   await assertAdmin();
   const db = createAdminSupabase();
   await db.from("profiles").update({ active }).eq("id", repId).eq("role", "rep");
-  if (active === false) {
-    // Revoke every live session so a deactivated rep is booted immediately,
-    // not just blocked at the DB layer on their next insert.
-    try {
-      await db.auth.admin.signOut(repId, "global");
-    } catch {
-      // A signOut failure must not fail the whole action; the DB-layer
-      // check still stops the deactivated rep from writing.
-    }
-  }
+  // Deactivation is enforced by RLS (surveys_rep_insert checks profiles.active) and middleware (re-checks active every request and signs the user out).
   revalidatePath("/admin/users");
 }
 

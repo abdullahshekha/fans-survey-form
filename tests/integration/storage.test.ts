@@ -9,14 +9,14 @@ describe("storage policies", () => {
   it("rep can upload under their own uid prefix", async () => {
     const rep1 = await signInAs("rep.one@survey.local", "test-pass-123");
     const { error } = await rep1.storage.from("survey-photos")
-      .upload(`${REP1}/test-survey/front.jpg`, bytes, { upsert: true });
+      .upload(`${REP1}/test-survey/front.jpg`, bytes);
     expect(error).toBeNull();
   });
 
   it("rep cannot upload under another rep's prefix", async () => {
     const rep1 = await signInAs("rep.one@survey.local", "test-pass-123");
     const { error } = await rep1.storage.from("survey-photos")
-      .upload(`${REP2}/test-survey/front.jpg`, bytes, { upsert: true });
+      .upload(`${REP2}/test-survey/front.jpg`, bytes);
     expect(error).not.toBeNull();
   });
 
