@@ -1,5 +1,6 @@
 import { MediaGallery } from "./MediaGallery";
 import { MiniMap } from "./MiniMap";
+import { DeleteSurveyButton } from "@/components/admin/DeleteSurveyButton";
 import { formatDateTime } from "@/lib/format";
 import type { SurveyWithRelations } from "@/lib/types";
 
@@ -12,9 +13,10 @@ function Row({ label, value }: { label: string; value: React.ReactNode }) {
   );
 }
 
-export function SurveyDetail({ survey, media }: {
+export function SurveyDetail({ survey, media, canDelete }: {
   survey: SurveyWithRelations;
   media: { photos: { kind: "front" | "inner"; url: string }[]; audio: string | null };
+  canDelete?: boolean;
 }) {
   return (
     <main className="mx-auto flex max-w-md flex-col gap-5 p-5">
@@ -47,6 +49,12 @@ export function SurveyDetail({ survey, media }: {
       ) : null}
 
       <MiniMap lat={survey.gps_lat} lng={survey.gps_lng} />
+
+      {canDelete ? (
+        <div className="border-t border-slate-200 pt-4">
+          <DeleteSurveyButton surveyId={survey.id} />
+        </div>
+      ) : null}
     </main>
   );
 }

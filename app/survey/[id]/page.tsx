@@ -19,5 +19,11 @@ export default async function SurveyDetailPage({ params }: { params: Promise<{ i
   if (error || !data) notFound();
 
   const media = await getSignedMediaUrls(id);
-  return <SurveyDetail survey={data as SurveyWithRelations} media={media} />;
+  return (
+    <SurveyDetail
+      survey={data as SurveyWithRelations}
+      media={media}
+      canDelete={profile.role === "admin"}
+    />
+  );
 }
