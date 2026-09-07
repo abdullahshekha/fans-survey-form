@@ -20,3 +20,29 @@ begin
     (rep2_id,  'rep.two', 'Rep Two',     'rep',   true)
   on conflict (id) do nothing;
 end $$;
+
+-- Two sample surveys owned by rep.one, for manual testing of /survey/[id].
+-- Storage objects are NOT seeded; the detail gallery renders broken images in
+-- local dev, which is acceptable here.
+insert into public.surveys (
+  id, rep_id, shop_name, market, shop_size, customer_name, customer_number,
+  gps_lat, gps_lng, gps_accuracy, most_selling_fan,
+  rec_30w_1, rec_30w_2, rec_50w_1, rec_50w_2, audio_path
+) values
+  ('20000000-0000-0000-0000-000000000001', '10000000-0000-0000-0000-000000000002',
+   'Arambagh Electronics', 'Arambagh', 'Medium', 'Bilal Ahmed', '03001234567',
+   24.85620, 67.02310, 12.5, 'GFC',
+   'GFC', 'Tamoor', 'Royal', 'SK', null),
+  ('20000000-0000-0000-0000-000000000002', '10000000-0000-0000-0000-000000000002',
+   'Malir Fan House', 'Malir', 'Large', 'Sana Khalid', '03009876543',
+   24.89340, 67.19080, 8.0, 'Pak Fans',
+   'Pak Fans', null, 'Tamoor', null, '10000000-0000-0000-0000-000000000002/20000000-0000-0000-0000-000000000002/comment.webm')
+on conflict (id) do nothing;
+
+insert into public.survey_photos (survey_id, kind, storage_path, sort_order) values
+  ('20000000-0000-0000-0000-000000000001', 'front', '10000000-0000-0000-0000-000000000002/20000000-0000-0000-0000-000000000001/front.jpg', 0),
+  ('20000000-0000-0000-0000-000000000001', 'inner', '10000000-0000-0000-0000-000000000002/20000000-0000-0000-0000-000000000001/inner-0.jpg', 0),
+  ('20000000-0000-0000-0000-000000000001', 'inner', '10000000-0000-0000-0000-000000000002/20000000-0000-0000-0000-000000000001/inner-1.jpg', 1),
+  ('20000000-0000-0000-0000-000000000002', 'front', '10000000-0000-0000-0000-000000000002/20000000-0000-0000-0000-000000000002/front.jpg', 0),
+  ('20000000-0000-0000-0000-000000000002', 'inner', '10000000-0000-0000-0000-000000000002/20000000-0000-0000-0000-000000000002/inner-0.jpg', 0),
+  ('20000000-0000-0000-0000-000000000002', 'inner', '10000000-0000-0000-0000-000000000002/20000000-0000-0000-0000-000000000002/inner-1.jpg', 1);
