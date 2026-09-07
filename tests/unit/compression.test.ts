@@ -2,7 +2,7 @@ import { describe, it, expect, vi } from "vitest";
 import type { Mock } from "vitest";
 
 vi.mock("browser-image-compression", () => ({
-  default: vi.fn(async (file: File) => new File([await file.arrayBuffer()], "out.dat", { type: "image/jpeg" })),
+  default: vi.fn(async () => new File([new Uint8Array(8)], "out.dat", { type: "image/jpeg" })),
 }));
 
 import imageCompression from "browser-image-compression";
