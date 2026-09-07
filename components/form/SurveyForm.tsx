@@ -14,11 +14,14 @@ const EMPTY: SurveyFormValues = {
   frontPhoto: null, innerPhotos: [], audio: null,
 };
 
-export function SurveyForm({ onSubmit }: { onSubmit: (v: SurveyFormValues) => Promise<void> }) {
+export function SurveyForm({ onSubmit, onDirty }: { onSubmit: (v: SurveyFormValues) => Promise<void>; onDirty?: () => void }) {
   const [v, setV] = useState<SurveyFormValues>(EMPTY);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [busy, setBusy] = useState(false);
-  const set = <K extends keyof SurveyFormValues>(k: K, val: SurveyFormValues[K]) => setV((s) => ({ ...s, [k]: val }));
+  const set = <K extends keyof SurveyFormValues>(k: K, val: SurveyFormValues[K]) => {
+    onDirty?.();
+    setV((s) => ({ ...s, [k]: val }));
+  };
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
