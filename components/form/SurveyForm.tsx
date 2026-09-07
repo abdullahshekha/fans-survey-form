@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { TextField } from "./TextField";
 import { SelectField } from "./SelectField";
+import { GpsCapture } from "./GpsCapture";
 import { BRANDS, MARKETS, SHOP_SIZES } from "@/lib/constants";
 import { validateSurvey, type SurveyFormValues, type GpsFix } from "@/lib/validation";
 
@@ -45,7 +46,7 @@ export function SurveyForm({ onSubmit }: { onSubmit: (v: SurveyFormValues) => Pr
         value={v.customer_number} onChange={(x) => set("customer_number", x)} error={errors.customer_number} />
 
       <div data-region="gps" data-invalid={errors.gps ? "true" : undefined}>
-        {/* GpsCapture slotted in Task 15 */}
+        <GpsCapture value={v.gps} onChange={(f) => set("gps", f)} />
         {errors.gps ? <span role="alert" className="text-xs text-red-600">{errors.gps}</span> : null}
       </div>
 
