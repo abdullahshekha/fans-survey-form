@@ -4,6 +4,7 @@ import { TextField } from "./TextField";
 import { SelectField } from "./SelectField";
 import { GpsCapture } from "./GpsCapture";
 import { PhotoCapture } from "./PhotoCapture";
+import { VoiceRecorder } from "./VoiceRecorder";
 import { BRANDS, MARKETS, SHOP_SIZES } from "@/lib/constants";
 import { validateSurvey, type SurveyFormValues, type GpsFix } from "@/lib/validation";
 
@@ -72,7 +73,9 @@ export function SurveyForm({ onSubmit }: { onSubmit: (v: SurveyFormValues) => Pr
       <SelectField label="50W — Recommend 2 (optional)" name="rec_50w_2" value={v.rec_50w_2}
         onChange={(x) => set("rec_50w_2", x)} error={errors.rec_50w_2} options={BRANDS} placeholder="None" />
 
-      <div data-region="voice">{/* VoiceRecorder slotted in Task 17 */}</div>
+      <div data-region="voice">
+        <VoiceRecorder value={v.audio} onChange={(b) => set("audio", b)} />
+      </div>
 
       <div className="fixed inset-x-0 bottom-0 border-t border-slate-200 bg-white p-4">
         <button type="submit" disabled={busy}
