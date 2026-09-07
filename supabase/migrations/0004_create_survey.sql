@@ -33,6 +33,9 @@ begin
 
   for v_photo in select * from jsonb_array_elements(coalesce(payload->'photos', '[]'::jsonb))
   loop
+    if (v_photo->>'storage_path') not like auth.uid()::text || '/%' then
+      raise exception 'photo storage_path must be under the caller prefix';
+    end if;
     insert into public.survey_photos (survey_id, kind, storage_path, sort_order)
     values (v_id, v_photo->>'kind', v_photo->>'storage_path',
             coalesce((v_photo->>'sort_order')::int, 0));

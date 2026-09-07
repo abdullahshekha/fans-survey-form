@@ -26,6 +26,11 @@ This guide covers deploying the Fan Retailer Survey app to production using Verc
 
 Store these values securely; you will need them in the next steps.
 
+> **Raise the API row limit.** In **Settings → API**, set **Max Rows** to at
+> least `100000`. The default of `1000` will silently truncate the CSV/XLSX
+> export, the overview charts, and the map, all of which rely on unpaged
+> queries.
+
 ## Step 2: Apply database schema and migrations
 
 1. Link the local repository to the production Supabase project:

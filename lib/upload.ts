@@ -13,13 +13,13 @@ export async function uploadSurveyMedia(
   const base = `${repUid}/${surveyId}`;
 
   const frontPath = `${base}/front.jpg`;
-  const front = await supabase.storage.from(PHOTO_BUCKET).upload(frontPath, v.frontPhoto!, { upsert: true, contentType: "image/jpeg" });
+  const front = await supabase.storage.from(PHOTO_BUCKET).upload(frontPath, v.frontPhoto!, { contentType: "image/jpeg" });
   if (front.error) throw new Error(`Photo upload failed: ${front.error.message}`);
 
   const inner: string[] = [];
   for (let i = 0; i < v.innerPhotos.length; i++) {
     const p = `${base}/inner-${i}.jpg`;
-    const res = await supabase.storage.from(PHOTO_BUCKET).upload(p, v.innerPhotos[i], { upsert: true, contentType: "image/jpeg" });
+    const res = await supabase.storage.from(PHOTO_BUCKET).upload(p, v.innerPhotos[i], { contentType: "image/jpeg" });
     if (res.error) throw new Error(`Photo upload failed: ${res.error.message}`);
     inner.push(p);
   }
@@ -28,7 +28,7 @@ export async function uploadSurveyMedia(
   if (v.audio) {
     const ext = v.audio.type.includes("mp4") ? "mp4" : "webm";
     const p = `${base}/comment.${ext}`;
-    const res = await supabase.storage.from(AUDIO_BUCKET).upload(p, v.audio, { upsert: true, contentType: v.audio.type });
+    const res = await supabase.storage.from(AUDIO_BUCKET).upload(p, v.audio, { contentType: v.audio.type });
     if (res.error) throw new Error(`Voice note upload failed: ${res.error.message}`);
     audio = p;
   }

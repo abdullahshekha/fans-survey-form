@@ -15,7 +15,7 @@ export function SurveyTable({ rows }: { rows: AdminSurveyRow[] }) {
             <tr key={r.id} className="border-b border-slate-100 hover:bg-slate-50">
               <td className="py-2"><Link href={`/survey/${r.id}`} className="block">{formatDateTime(r.created_at)}</Link></td>
               <td>{r.rep_username}</td>
-              <td>{r.shop_name}</td>
+              <td><Link href={`/survey/${r.id}`} className="block">{r.shop_name}</Link></td>
               <td>{r.market}</td>
               <td>{r.shop_size}</td>
               <td>{r.most_selling_fan}</td>

@@ -7,5 +7,6 @@ test("admin map renders tiles and a legend", async ({ page }) => {
   await page.getByRole("button", { name: "Sign in" }).click();
   await page.goto("/admin/map");
   await expect(page.locator(".leaflet-container")).toBeVisible();
-  await expect(page.getByText("Arambagh", { exact: true })).toBeVisible();
+  // Scope to the legend list item; "Arambagh" also appears as a filter <option>.
+  await expect(page.getByRole("listitem").filter({ hasText: "Arambagh" })).toBeVisible();
 });

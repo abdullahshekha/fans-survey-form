@@ -16,8 +16,8 @@ export function buildSurveyQuery(query: any, f: SurveyFilter) {
   if (f.from) query = query.gte("created_at", f.from);
   if (f.to) query = query.lte("created_at", `${f.to}T23:59:59`);
   if (f.q) {
-    const safe = f.q.replace(/[%,]/g, "");
-    query = query.or(`shop_name.ilike.%${safe}%,customer_name.ilike.%${safe}%`);
+    const safe = f.q.replace(/["\\]/g, "").replace(/[%,()*]/g, " ").trim();
+    if (safe) query = query.or(`shop_name.ilike."%${safe}%",customer_name.ilike."%${safe}%"`);
   }
   const ordered = query.order("created_at", { ascending: false });
   if (f.all) return ordered;

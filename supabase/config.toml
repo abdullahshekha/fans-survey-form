@@ -9,7 +9,9 @@ enabled = true
 port = 54321
 schemas = ["public", "storage", "graphql_public"]
 extra_search_path = ["public", "extensions"]
-max_rows = 1000
+# The export, overview charts, and map issue unpaged (`all: true`) queries.
+# The 1000-row default would silently truncate them.
+max_rows = 100000
 
 [db]
 port = 54322

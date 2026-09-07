@@ -6,13 +6,14 @@ import { ExportButton } from "@/components/admin/ExportButton";
 
 export default async function AdminSurveysPage({ searchParams }: { searchParams: Promise<Record<string, string>> }) {
   const sp = await searchParams;
+  const parsedPage = parseInt(sp.page ?? "", 10);
   const filter: SurveyFilter = {
     market: sp.market || undefined,
     repId: sp.repId || undefined,
     from: sp.from || undefined,
     to: sp.to || undefined,
     q: sp.q || undefined,
-    page: sp.page ? Math.max(0, parseInt(sp.page, 10)) : 0,
+    page: Number.isFinite(parsedPage) && parsedPage > 0 ? parsedPage : 0,
   };
 
   const db = createAdminSupabase();

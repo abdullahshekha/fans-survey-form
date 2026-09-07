@@ -20,7 +20,8 @@ create policy profiles_admin_all on public.profiles
 
 -- surveys
 create policy surveys_rep_insert on public.surveys
-  for insert with check (rep_id = auth.uid());
+  for insert with check (rep_id = auth.uid() and exists (
+    select 1 from public.profiles p where p.id = auth.uid() and p.active));
 create policy surveys_select_own_or_admin on public.surveys
   for select using (rep_id = auth.uid() or public.is_admin());
 create policy surveys_admin_update on public.surveys
