@@ -7,6 +7,7 @@ export interface SurveyFilter {
   to?: string;
   q?: string;
   page?: number;
+  all?: boolean;
 }
 
 export function buildSurveyQuery(query: any, f: SurveyFilter) {
@@ -18,10 +19,10 @@ export function buildSurveyQuery(query: any, f: SurveyFilter) {
     const safe = f.q.replace(/[%,]/g, "");
     query = query.or(`shop_name.ilike.%${safe}%,customer_name.ilike.%${safe}%`);
   }
+  const ordered = query.order("created_at", { ascending: false });
+  if (f.all) return ordered;
   const page = f.page ?? 0;
-  return query
-    .order("created_at", { ascending: false })
-    .range(page * PAGE_SIZE, page * PAGE_SIZE + PAGE_SIZE - 1);
+  return ordered.range(page * PAGE_SIZE, page * PAGE_SIZE + PAGE_SIZE - 1);
 }
 
 export interface AdminSurveyRow {

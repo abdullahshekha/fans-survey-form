@@ -30,4 +30,12 @@ describe("buildSurveyQuery", () => {
     expect(names).not.toContain("or");
     expect(names).toContain("range");
   });
+
+  it("skips range when all: true", () => {
+    const b = fakeBuilder();
+    buildSurveyQuery(b, { all: true });
+    const names = b.__calls.map((c: any) => c[0]);
+    expect(names).toContain("order");
+    expect(names).not.toContain("range");
+  });
 });
