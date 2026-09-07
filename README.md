@@ -112,6 +112,7 @@ npm run start            # Start production server
 npm run lint             # Run ESLint
 npm test                 # Run unit/integration tests
 npm run test:watch       # Watch mode for tests
+npm run test:integration # Vitest integration tests (needs a running local Supabase)
 npm run e2e              # Run Playwright E2E tests
 npm run db:start         # Start local Supabase (alias: supabase start)
 npm run db:reset         # Reset local Supabase database
