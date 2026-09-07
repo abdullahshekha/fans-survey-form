@@ -3,6 +3,7 @@ import { useState } from "react";
 import { TextField } from "./TextField";
 import { SelectField } from "./SelectField";
 import { GpsCapture } from "./GpsCapture";
+import { PhotoCapture } from "./PhotoCapture";
 import { BRANDS, MARKETS, SHOP_SIZES } from "@/lib/constants";
 import { validateSurvey, type SurveyFormValues, type GpsFix } from "@/lib/validation";
 
@@ -51,7 +52,11 @@ export function SurveyForm({ onSubmit }: { onSubmit: (v: SurveyFormValues) => Pr
       </div>
 
       <div data-region="photos" data-invalid={errors.frontPhoto || errors.innerPhotos ? "true" : undefined}>
-        {/* PhotoCapture slotted in Task 16 */}
+        <PhotoCapture
+          front={v.frontPhoto} inner={v.innerPhotos}
+          onFrontChange={(f) => set("frontPhoto", f)}
+          onInnerChange={(files) => set("innerPhotos", files)}
+        />
         {errors.frontPhoto ? <span role="alert" className="text-xs text-red-600">{errors.frontPhoto}</span> : null}
         {errors.innerPhotos ? <span role="alert" className="block text-xs text-red-600">{errors.innerPhotos}</span> : null}
       </div>
