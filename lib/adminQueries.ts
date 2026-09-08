@@ -33,6 +33,7 @@ export interface AdminSurveyRow {
   market: string;
   shop_size: string;
   most_selling_fan: string;
+  most_selling_fan_other: string | null;
   front_thumb_path: string | null;
 }
 
@@ -40,7 +41,7 @@ export async function getSurveysPage(db: any, f: SurveyFilter): Promise<{ rows: 
   const base = db
     .from("surveys")
     .select(
-      "id, created_at, shop_name, market, shop_size, most_selling_fan, profiles!surveys_rep_id_fkey(username), survey_photos(kind, storage_path, sort_order)",
+      "id, created_at, shop_name, market, shop_size, most_selling_fan, most_selling_fan_other, profiles!surveys_rep_id_fkey(username), survey_photos(kind, storage_path, sort_order)",
       { count: "exact" },
     );
   const { data, count, error } = await buildSurveyQuery(base, f);
@@ -53,6 +54,7 @@ export async function getSurveysPage(db: any, f: SurveyFilter): Promise<{ rows: 
     market: r.market,
     shop_size: r.shop_size,
     most_selling_fan: r.most_selling_fan,
+    most_selling_fan_other: r.most_selling_fan_other ?? null,
     front_thumb_path: r.survey_photos?.find((p: any) => p.kind === "front")?.storage_path ?? null,
   }));
   return { rows, total: count ?? rows.length };

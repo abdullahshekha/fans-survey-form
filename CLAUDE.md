@@ -19,9 +19,9 @@ surveys, per-rep counts, filters, CSV/XLSX export, a map, and comparison charts.
 
 - **Live on Vercel**, deployed from the `master` branch (every push to `master`
   auto-deploys). Default branch is `master`, not `main`.
-- Backed by a hosted Supabase project. Migrations `0001`–`0004` are applied;
+- Backed by a hosted Supabase project. Migrations `0001`–`0005` are applied;
   buckets exist and are private; an admin account is seeded.
-- **Verified:** `npm test` (59 unit tests), `npx tsc --noEmit`, `npm run build`,
+- **Verified:** `npm test` (81 unit tests), `npx tsc --noEmit`, `npm run build`,
   and manual end-to-end (rep submits a survey → admin sees it) on the live URL.
 - **Not yet run:** `npm run test:integration` and `npm run e2e` — the suites are
   written but have never executed against a real Supabase. Worth doing once.
@@ -60,11 +60,16 @@ surveys, per-rep counts, filters, CSV/XLSX export, a map, and comparison charts.
   Postgres `CHECK` constraints. Markets: Arambagh, MA Jinnah, Waterpump,
   Bohrapir, Johar Mor, UP, Liaquatabad, Shah Faisal Colony, Orangi Town, Baldia
   Town, Malir, Landhi/Korangi. Brands: Tamoor, Khurshid, SK, GFC, Royal, Pak
-  Fans, Lahore Fans. Shop sizes: Small, Medium, Large.
+  Fans, Lahore Fans, plus the free-text `"Other"` option. A brand field may hold
+  the literal `'Other'`, in which case its companion `<field>_other` column
+  holds the typed name (trimmed, 1–`MAX_OTHER_BRAND_LEN` = 40 chars, required
+  when the field is `'Other'`). Exports: `OTHER_BRAND`, `BRAND_SELECT_OPTIONS`.
+  Shop sizes: Small, Medium, Large.
 - **Required survey fields:** shop name, market, shop size, customer name,
   customer number (Pakistani mobile `03XXXXXXXXX`), GPS, one front photo, 1–10
   inner photos, most-selling fan, `rec_30w_1`, `rec_50w_1`. Everything else
-  (both `rec_*_2`, voice note) is optional.
+  (both `rec_*_2`, voice note, quotation photos) is optional. Quotation photos:
+  0–`MAX_QUOTATION_PHOTOS` = 2, stored as `survey_photos.kind = 'quotation'`.
 - **No offline support and no draft autosave.** Submitting needs a live
   connection; a failed submit writes nothing and the rep retries.
 - Login is **username + password**. Each account maps to a synthetic email
@@ -82,7 +87,7 @@ components/  shared UI + form/ + admin/
 lib/         supabase clients, constants, validation, geo, compression, audio,
             adminQueries, aggregations, exportSurveys, submitSurvey, upload
 middleware.ts  auth + role + active-account route protection
-supabase/   migrations/ (0001–0004), seed.sql (local dev only), config.toml
+supabase/   migrations/ (0001–0005), seed.sql (local dev only), config.toml
 scripts/    seed-admin.ts
 tests/      unit/ (vitest, run), integration/ + e2e/ (authored, not yet run)
 ```
@@ -110,7 +115,8 @@ Local dev reads `.env.local` (git-ignored). `npm run dev` loads it automatically
 - Seed a real admin against whatever `.env.local` points to: `npm run seed:admin`
   (idempotent — re-run to reset the password).
 - **Migrations `0002`–`0004` were edited in place before first deploy.** For any
-  further schema change add a new `0005_*.sql` — do not edit an applied file.
+  further schema change add a new numbered migration (e.g., `0006_*.sql`) — do
+  not edit an applied file. Migrations are append-only.
 
 ## Testing
 

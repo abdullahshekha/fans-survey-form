@@ -10,6 +10,8 @@ function payload(id: string, over: Record<string, unknown> = {}) {
     gps_lat: 24.86, gps_lng: 67.02, gps_accuracy: 10,
     most_selling_fan: "GFC", rec_30w_1: "Tamoor", rec_30w_2: null,
     rec_50w_1: "Royal", rec_50w_2: null, audio_path: null,
+    most_selling_fan_other: null, rec_30w_1_other: null, rec_30w_2_other: null,
+    rec_50w_1_other: null, rec_50w_2_other: null,
     photos: [
       { kind: "front", storage_path: `${REP1}/${id}/front.jpg`, sort_order: 0 },
       { kind: "inner", storage_path: `${REP1}/${id}/inner-0.jpg`, sort_order: 0 },
@@ -64,5 +66,51 @@ describe("create_survey RPC", () => {
       ] }),
     });
     expect(error).not.toBeNull();
+  });
+
+  it("accepts up to 2 quotation photos", async () => {
+    const rep = await signInAs("rep.one@survey.local", "test-pass-123");
+    const id = "aaaa1111-0000-0000-0000-000000000001";
+    const p = payload(id, { photos: [
+      { kind: "front", storage_path: `${REP1}/${id}/front.jpg`, sort_order: 0 },
+      { kind: "inner", storage_path: `${REP1}/${id}/inner-0.jpg`, sort_order: 0 },
+      { kind: "quotation", storage_path: `${REP1}/${id}/quotation-0.jpg`, sort_order: 0 },
+      { kind: "quotation", storage_path: `${REP1}/${id}/quotation-1.jpg`, sort_order: 1 },
+    ] });
+    const { error } = await rep.rpc("create_survey", { payload: p });
+    expect(error).toBeNull();
+  });
+
+  it("rolls back on a 3rd quotation photo", async () => {
+    const rep = await signInAs("rep.one@survey.local", "test-pass-123");
+    const id = "aaaa1111-0000-0000-0000-000000000002";
+    const q = (n: number) => ({ kind: "quotation", storage_path: `${REP1}/${id}/quotation-${n}.jpg`, sort_order: n });
+    const { error } = await rep.rpc("create_survey", { payload: payload(id, { photos: [
+      { kind: "front", storage_path: `${REP1}/${id}/front.jpg`, sort_order: 0 },
+      { kind: "inner", storage_path: `${REP1}/${id}/inner-0.jpg`, sort_order: 0 },
+      q(0), q(1), q(2),
+    ] }) });
+    expect(error).not.toBeNull();
+    const { count } = await serviceClient().from("surveys")
+      .select("id", { count: "exact", head: true }).eq("id", id);
+    expect(count).toBe(0);
+  });
+
+  it("stores an Other brand name and rejects Other with no name", async () => {
+    const rep = await signInAs("rep.one@survey.local", "test-pass-123");
+    const ok = "aaaa1111-0000-0000-0000-000000000003";
+    const okRes = await rep.rpc("create_survey", {
+      payload: payload(ok, { most_selling_fan: "Other", most_selling_fan_other: "Fanco" }),
+    });
+    expect(okRes.error).toBeNull();
+    const { data } = await serviceClient().from("surveys")
+      .select("most_selling_fan, most_selling_fan_other").eq("id", ok).single();
+    expect(data).toEqual({ most_selling_fan: "Other", most_selling_fan_other: "Fanco" });
+
+    const bad = "aaaa1111-0000-0000-0000-000000000004";
+    const badRes = await rep.rpc("create_survey", {
+      payload: payload(bad, { most_selling_fan: "Other", most_selling_fan_other: "" }),
+    });
+    expect(badRes.error).not.toBeNull();
   });
 });

@@ -21,4 +21,11 @@ describe("SurveyForm validation", () => {
     await userEvent.click(screen.getByRole("button", { name: /submit survey/i }));
     expect(await screen.findByText(/valid pakistani mobile number/i)).toBeInTheDocument();
   });
+
+  it("requires a typed name when a brand is set to Other", async () => {
+    render(<SurveyForm onSubmit={vi.fn()} />);
+    await userEvent.selectOptions(screen.getByRole("combobox", { name: /most selling fan/i }), "Other");
+    await userEvent.click(screen.getByRole("button", { name: /submit survey/i }));
+    expect(await screen.findByText(/enter the brand name/i)).toBeInTheDocument();
+  });
 });

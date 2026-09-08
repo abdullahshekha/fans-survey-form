@@ -1,4 +1,7 @@
-import { BRANDS, MARKETS, SHOP_SIZES, MAX_INNER_PHOTOS } from "./constants";
+import {
+  BRANDS, MARKETS, SHOP_SIZES, MAX_INNER_PHOTOS,
+  MAX_QUOTATION_PHOTOS, MAX_OTHER_BRAND_LEN, OTHER_BRAND,
+} from "./constants";
 
 export interface GpsFix { lat: number; lng: number; accuracy: number | null }
 
@@ -14,8 +17,14 @@ export interface SurveyFormValues {
   rec_30w_2: string;
   rec_50w_1: string;
   rec_50w_2: string;
+  most_selling_fan_other: string;
+  rec_30w_1_other: string;
+  rec_30w_2_other: string;
+  rec_50w_1_other: string;
+  rec_50w_2_other: string;
   frontPhoto: File | null;
   innerPhotos: File[];
+  quotationPhotos: File[];
   audio: Blob | null;
 }
 
@@ -35,7 +44,12 @@ export interface SurveyRpcPayload {
   rec_50w_1: string;
   rec_50w_2: string | null;
   audio_path: string | null;
-  photos: { kind: "front" | "inner"; storage_path: string; sort_order: number }[];
+  most_selling_fan_other: string | null;
+  rec_30w_1_other: string | null;
+  rec_30w_2_other: string | null;
+  rec_50w_1_other: string | null;
+  rec_50w_2_other: string | null;
+  photos: { kind: "front" | "inner" | "quotation"; storage_path: string; sort_order: number }[];
 }
 
 export function normalizePhone(input: string): string | null {
@@ -49,6 +63,19 @@ export function normalizePhone(input: string): string | null {
 
 const isBrand = (v: string) => (BRANDS as readonly string[]).includes(v);
 
+type BrandFieldResult = { field: "self" | "other"; msg: string } | null;
+function brandCheck(brand: string, other: string, optional: boolean): BrandFieldResult {
+  if (!brand) return optional ? null : { field: "self", msg: "Select a brand" };
+  if (brand === OTHER_BRAND) {
+    const t = other.trim();
+    if (!t) return { field: "other", msg: "Enter the brand name" };
+    if (t.length > MAX_OTHER_BRAND_LEN) return { field: "other", msg: `Use ${MAX_OTHER_BRAND_LEN} characters or fewer` };
+    return null;
+  }
+  if (!isBrand(brand)) return { field: "self", msg: "Invalid brand" };
+  return null;
+}
+
 export function validateSurvey(v: SurveyFormValues): Record<string, string> {
   const e: Record<string, string> = {};
   if (!v.shop_name.trim()) e.shop_name = "Shop name is required";
@@ -57,22 +84,30 @@ export function validateSurvey(v: SurveyFormValues): Record<string, string> {
   if (!v.customer_name.trim()) e.customer_name = "Customer name is required";
   if (!normalizePhone(v.customer_number)) e.customer_number = "Enter a valid Pakistani mobile number";
   if (!v.gps) e.gps = "Capture the shop location";
-  if (!isBrand(v.most_selling_fan)) e.most_selling_fan = "Select the most selling fan";
-  if (!isBrand(v.rec_30w_1)) e.rec_30w_1 = "Select a 30W recommendation";
-  if (v.rec_30w_2 && !isBrand(v.rec_30w_2)) e.rec_30w_2 = "Invalid brand";
-  if (!isBrand(v.rec_50w_1)) e.rec_50w_1 = "Select a 50W recommendation";
-  if (v.rec_50w_2 && !isBrand(v.rec_50w_2)) e.rec_50w_2 = "Invalid brand";
+  for (const [name, brand, other, optional] of [
+    ["most_selling_fan", v.most_selling_fan, v.most_selling_fan_other, false],
+    ["rec_30w_1", v.rec_30w_1, v.rec_30w_1_other, false],
+    ["rec_30w_2", v.rec_30w_2, v.rec_30w_2_other, true],
+    ["rec_50w_1", v.rec_50w_1, v.rec_50w_1_other, false],
+    ["rec_50w_2", v.rec_50w_2, v.rec_50w_2_other, true],
+  ] as const) {
+    const r = brandCheck(brand, other, optional);
+    if (r) e[r.field === "self" ? name : `${name}_other`] = r.msg;
+  }
   if (!v.frontPhoto) e.frontPhoto = "Add a front photo";
   if (v.innerPhotos.length < 1) e.innerPhotos = "Add at least one inner photo";
   else if (v.innerPhotos.length > MAX_INNER_PHOTOS) e.innerPhotos = `No more than ${MAX_INNER_PHOTOS} inner photos`;
+  if (v.quotationPhotos.length > MAX_QUOTATION_PHOTOS)
+    e.quotationPhotos = `No more than ${MAX_QUOTATION_PHOTOS} quotation photos`;
   return e;
 }
 
 export function buildSurveyPayload(
   id: string,
   v: SurveyFormValues,
-  paths: { front: string; inner: string[]; audio: string | null },
+  paths: { front: string; inner: string[]; quotation: string[]; audio: string | null },
 ): SurveyRpcPayload {
+  const otherOf = (brand: string, other: string) => (brand === OTHER_BRAND ? (other.trim() || null) : null);
   return {
     id,
     shop_name: v.shop_name.trim(),
@@ -89,9 +124,15 @@ export function buildSurveyPayload(
     rec_50w_1: v.rec_50w_1,
     rec_50w_2: v.rec_50w_2 || null,
     audio_path: paths.audio,
+    most_selling_fan_other: otherOf(v.most_selling_fan, v.most_selling_fan_other),
+    rec_30w_1_other: otherOf(v.rec_30w_1, v.rec_30w_1_other),
+    rec_30w_2_other: otherOf(v.rec_30w_2, v.rec_30w_2_other),
+    rec_50w_1_other: otherOf(v.rec_50w_1, v.rec_50w_1_other),
+    rec_50w_2_other: otherOf(v.rec_50w_2, v.rec_50w_2_other),
     photos: [
       { kind: "front", storage_path: paths.front, sort_order: 0 },
       ...paths.inner.map((p, i) => ({ kind: "inner" as const, storage_path: p, sort_order: i })),
+      ...paths.quotation.map((p, i) => ({ kind: "quotation" as const, storage_path: p, sort_order: i })),
     ],
   };
 }

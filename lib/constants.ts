@@ -9,10 +9,15 @@ export const BRANDS = [
 ] as const;
 export type Brand = (typeof BRANDS)[number];
 
+export const OTHER_BRAND = "Other" as const;
+export const BRAND_SELECT_OPTIONS = [...BRANDS, OTHER_BRAND] as const;
+export const MAX_OTHER_BRAND_LEN = 40;
+
 export const SHOP_SIZES = ["Small", "Medium", "Large"] as const;
 export type ShopSize = (typeof SHOP_SIZES)[number];
 
 export const MAX_INNER_PHOTOS = 10;
+export const MAX_QUOTATION_PHOTOS = 2;
 export const MAX_AUDIO_SECONDS = 120;
 export const SIGNED_URL_TTL = 21600; // 6 hours
 

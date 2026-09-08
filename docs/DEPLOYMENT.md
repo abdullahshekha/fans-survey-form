@@ -52,8 +52,40 @@ This applies all migrations in `supabase/migrations/` in order:
 - `0002_rls.sql` — row-level security policies and `is_admin()` function
 - `0003_storage.sql` — private storage bucket policies
 - `0004_create_survey.sql` — the `create_survey()` RPC function
+- `0005_survey_form_v2.sql` — "Other" brand support + quotation photos (see below)
 
 > **⚠️ Important:** Do **not** run `supabase/seed.sql` in production. It contains test data and demo accounts. Seed data is for local development only.
+
+### Step 2b — Survey Form v2 migration (0005)
+
+If the app is already live and you are adding the "Other" brand feature + quotation photos, migration 0005 must be applied to the hosted database **before** deploying the app code. The migration is backward-compatible; existing rows remain unaffected.
+
+1. In the Supabase dashboard, go to **SQL Editor** and open a new query.
+2. Copy the entire contents of `supabase/migrations/0005_survey_form_v2.sql` and paste it into the editor.
+3. Click **Run**. This will:
+   - Add `'Other'` to all brand field `CHECK` constraints
+   - Add 5 companion `*_other` columns for typed brand names (with pairing `CHECK` constraints)
+   - Add `'quotation'` to the `survey_photos.kind` `CHECK` constraint
+   - Replace the `create_survey()` RPC to handle the new fields and validate them
+
+4. **Record the migration in the ledger.** A migration run from the SQL Editor does
+   **not** write to `supabase_migrations.schema_migrations`, so a later
+   `supabase db push` against this project would try to apply `0005` again and
+   fail partway (the brand `CHECK` names are already swapped). Immediately after
+   step 3, run this in the same SQL Editor:
+
+   ```sql
+   insert into supabase_migrations.schema_migrations (version, name)
+   values ('0005', 'survey_form_v2')
+   on conflict (version) do nothing;
+   ```
+
+   Alternatively, if you never intend to run `supabase db push` against this
+   project again, you may skip this — but recording it is safer.
+
+5. Once complete, proceed to deploy the app code (push to `master` on Vercel).
+
+> **Note:** Existing rows are unaffected — the `*_other` columns default to `null`, and no quotation photos exist until a new survey is submitted with them. The replaced RPC is fully backward-compatible.
 
 ## Step 3: Verify storage buckets
 
@@ -62,7 +94,7 @@ This applies all migrations in `supabase/migrations/` in order:
    - `survey-photos`
    - `survey-audio`
 
-Both are created by `0003_storage.sql` and should already be present if step 2 completed successfully. Verify their **Privacy** setting is **Private** (not public).
+Both are created by `0003_storage.sql` and should already be present if Step 2 completed successfully. Verify their **Privacy** setting is **Private** (not public).
 
 ## Step 4: Configure Vercel environment variables
 
@@ -109,10 +141,10 @@ This creates the initial admin account in the production database. The script us
 
 ## Step 6: Deploy and sign in
 
-1. Push your repository to the `main` branch (or your configured deployment branch):
+1. Push your repository to the `master` branch:
 
 ```bash
-git push origin main
+git push origin master
 ```
 
 Vercel automatically detects the push and deploys the app.

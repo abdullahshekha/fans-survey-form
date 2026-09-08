@@ -3,7 +3,7 @@ import { createServerSupabase } from "@/lib/supabase/server";
 import { SIGNED_URL_TTL } from "@/lib/constants";
 
 export async function getSignedMediaUrls(surveyId: string): Promise<{
-  photos: { kind: "front" | "inner"; url: string }[];
+  photos: { kind: "front" | "inner" | "quotation"; url: string }[];
   audio: string | null;
 }> {
   const supabase = await createServerSupabase();
@@ -14,8 +14,9 @@ export async function getSignedMediaUrls(surveyId: string): Promise<{
     .single();
   if (error || !data) return { photos: [], audio: null };
 
+  const rank: Record<string, number> = { front: 0, inner: 1, quotation: 2 };
   const ordered = [...(data.survey_photos as any[])].sort((a, b) =>
-    a.kind === b.kind ? a.sort_order - b.sort_order : a.kind === "front" ? -1 : 1);
+    rank[a.kind] === rank[b.kind] ? a.sort_order - b.sort_order : rank[a.kind] - rank[b.kind]);
 
   const { data: signed } = await supabase.storage
     .from("survey-photos")
@@ -23,7 +24,7 @@ export async function getSignedMediaUrls(surveyId: string): Promise<{
 
   const byPath = new Map((signed ?? []).map((s: any) => [s.path, s.signedUrl]));
   const photos = ordered
-    .map((p) => ({ kind: p.kind as "front" | "inner", url: byPath.get(p.storage_path) as string }))
+    .map((p) => ({ kind: p.kind as "front" | "inner" | "quotation", url: byPath.get(p.storage_path) as string }))
     .filter((p) => !!p.url);
 
   let audio: string | null = null;

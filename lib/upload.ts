@@ -9,7 +9,7 @@ export async function uploadSurveyMedia(
   repUid: string,
   surveyId: string,
   v: SurveyFormValues,
-): Promise<{ front: string; inner: string[]; audio: string | null }> {
+): Promise<{ front: string; inner: string[]; quotation: string[]; audio: string | null }> {
   const base = `${repUid}/${surveyId}`;
 
   const frontPath = `${base}/front.jpg`;
@@ -24,6 +24,14 @@ export async function uploadSurveyMedia(
     inner.push(p);
   }
 
+  const quotation: string[] = [];
+  for (let i = 0; i < v.quotationPhotos.length; i++) {
+    const p = `${base}/quotation-${i}.jpg`;
+    const res = await supabase.storage.from(PHOTO_BUCKET).upload(p, v.quotationPhotos[i], { contentType: "image/jpeg" });
+    if (res.error) throw new Error(`Photo upload failed: ${res.error.message}`);
+    quotation.push(p);
+  }
+
   let audio: string | null = null;
   if (v.audio) {
     const ext = v.audio.type.includes("mp4") ? "mp4" : "webm";
@@ -33,5 +41,5 @@ export async function uploadSurveyMedia(
     audio = p;
   }
 
-  return { front: frontPath, inner, audio };
+  return { front: frontPath, inner, quotation, audio };
 }
