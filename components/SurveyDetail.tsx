@@ -1,7 +1,7 @@
 import { MediaGallery } from "./MediaGallery";
 import { MiniMap } from "./MiniMap";
 import { DeleteSurveyButton } from "@/components/admin/DeleteSurveyButton";
-import { formatDateTime } from "@/lib/format";
+import { brandDisplay, formatDateTime } from "@/lib/format";
 import type { SurveyWithRelations } from "@/lib/types";
 
 function Row({ label, value }: { label: string; value: React.ReactNode }) {
@@ -11,11 +11,6 @@ function Row({ label, value }: { label: string; value: React.ReactNode }) {
       <span className="text-right font-medium">{value || "—"}</span>
     </div>
   );
-}
-
-function brandDisplay(brand: string | null, other: string | null): string {
-  if (!brand) return "";
-  return brand === "Other" ? `Other — "${other ?? ""}"` : brand;
 }
 
 export function SurveyDetail({ survey, media, canDelete }: {

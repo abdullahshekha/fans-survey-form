@@ -1,3 +1,5 @@
+import { OTHER_BRAND } from "@/lib/constants";
+
 export interface ExportRow {
   submitted_at: string; rep: string; shop_name: string; market: string; shop_size: string;
   customer_name: string; customer_number: string; most_selling_fan: string;
@@ -14,7 +16,7 @@ export const EXPORT_COLUMNS: (keyof ExportRow)[] = [
 
 export function toExportRows(surveys: any[], signedByPath: Map<string, string>): ExportRow[] {
   const brandCell = (b: string | null, o: string | null) =>
-    b === "Other" ? `Other: ${o ?? ""}` : (b ?? "");
+    b === OTHER_BRAND ? `Other: ${o ?? ""}` : (b ?? "");
 
   return surveys.map((s) => {
     const inner = (s.survey_photos ?? [])

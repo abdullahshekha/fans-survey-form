@@ -33,6 +33,7 @@ export function BrandField({
           name={`${name}_other`} value={otherValue}
           onChange={(e) => onOtherChange(e.target.value)}
           maxLength={MAX_OTHER_BRAND_LEN} placeholder="Type the brand name"
+          aria-label={`${label} — brand name`}
           aria-invalid={!!error}
           className="rounded-lg border border-slate-300 px-3 py-2 text-base font-normal"
         />

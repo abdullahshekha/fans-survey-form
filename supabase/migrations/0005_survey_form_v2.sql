@@ -1,54 +1,65 @@
 -- Survey Form v2: "Other" brand option + Quotation photo kind.
+--
+-- Re-runnable: every `add column` / `drop constraint` is guarded with
+-- `if [not] exists`, and each `add constraint` is preceded by a matching
+-- `drop constraint if exists`, so a fresh `supabase db reset` or an accidental
+-- re-run is harmless. Constraint predicates, column types, and the RPC body are
+-- unchanged from the original migration.
 
 -- 1. Allow 'Other' in every brand CHECK (constraints are auto-named
 --    surveys_<col>_check from 0001).
 alter table public.surveys
-  drop constraint surveys_most_selling_fan_check,
+  drop constraint if exists surveys_most_selling_fan_check,
   add  constraint surveys_most_selling_fan_check check (most_selling_fan in (
     'Tamoor','Khurshid','SK','GFC','Royal','Pak Fans','Lahore Fans','Other'));
 alter table public.surveys
-  drop constraint surveys_rec_30w_1_check,
+  drop constraint if exists surveys_rec_30w_1_check,
   add  constraint surveys_rec_30w_1_check check (rec_30w_1 in (
     'Tamoor','Khurshid','SK','GFC','Royal','Pak Fans','Lahore Fans','Other'));
 alter table public.surveys
-  drop constraint surveys_rec_30w_2_check,
+  drop constraint if exists surveys_rec_30w_2_check,
   add  constraint surveys_rec_30w_2_check check (rec_30w_2 in (
     'Tamoor','Khurshid','SK','GFC','Royal','Pak Fans','Lahore Fans','Other'));
 alter table public.surveys
-  drop constraint surveys_rec_50w_1_check,
+  drop constraint if exists surveys_rec_50w_1_check,
   add  constraint surveys_rec_50w_1_check check (rec_50w_1 in (
     'Tamoor','Khurshid','SK','GFC','Royal','Pak Fans','Lahore Fans','Other'));
 alter table public.surveys
-  drop constraint surveys_rec_50w_2_check,
+  drop constraint if exists surveys_rec_50w_2_check,
   add  constraint surveys_rec_50w_2_check check (rec_50w_2 in (
     'Tamoor','Khurshid','SK','GFC','Royal','Pak Fans','Lahore Fans','Other'));
 
 -- 2. Companion columns for the typed brand name (only meaningful when the
 --    matching brand column = 'Other').
 alter table public.surveys
-  add column most_selling_fan_other text,
-  add column rec_30w_1_other        text,
-  add column rec_30w_2_other        text,
-  add column rec_50w_1_other        text,
-  add column rec_50w_2_other        text;
+  add column if not exists most_selling_fan_other text,
+  add column if not exists rec_30w_1_other        text,
+  add column if not exists rec_30w_2_other        text,
+  add column if not exists rec_50w_1_other        text,
+  add column if not exists rec_50w_2_other        text;
 
 alter table public.surveys
+  drop constraint if exists surveys_most_selling_fan_other_ck,
   add constraint surveys_most_selling_fan_other_ck check (
     (most_selling_fan is distinct from 'Other' and most_selling_fan_other is null)
     or (most_selling_fan = 'Other' and most_selling_fan_other is not null
         and char_length(btrim(most_selling_fan_other)) between 1 and 40)),
+  drop constraint if exists surveys_rec_30w_1_other_ck,
   add constraint surveys_rec_30w_1_other_ck check (
     (rec_30w_1 is distinct from 'Other' and rec_30w_1_other is null)
     or (rec_30w_1 = 'Other' and rec_30w_1_other is not null
         and char_length(btrim(rec_30w_1_other)) between 1 and 40)),
+  drop constraint if exists surveys_rec_30w_2_other_ck,
   add constraint surveys_rec_30w_2_other_ck check (
     (rec_30w_2 is distinct from 'Other' and rec_30w_2_other is null)
     or (rec_30w_2 = 'Other' and rec_30w_2_other is not null
         and char_length(btrim(rec_30w_2_other)) between 1 and 40)),
+  drop constraint if exists surveys_rec_50w_1_other_ck,
   add constraint surveys_rec_50w_1_other_ck check (
     (rec_50w_1 is distinct from 'Other' and rec_50w_1_other is null)
     or (rec_50w_1 = 'Other' and rec_50w_1_other is not null
         and char_length(btrim(rec_50w_1_other)) between 1 and 40)),
+  drop constraint if exists surveys_rec_50w_2_other_ck,
   add constraint surveys_rec_50w_2_other_ck check (
     (rec_50w_2 is distinct from 'Other' and rec_50w_2_other is null)
     or (rec_50w_2 = 'Other' and rec_50w_2_other is not null
@@ -56,7 +67,7 @@ alter table public.surveys
 
 -- 3. Allow the 'quotation' photo kind.
 alter table public.survey_photos
-  drop constraint survey_photos_kind_check,
+  drop constraint if exists survey_photos_kind_check,
   add  constraint survey_photos_kind_check check (kind in ('front','inner','quotation'));
 
 -- 4. Replace create_survey: write the 5 *_other values, count quotation photos

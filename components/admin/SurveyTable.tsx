@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { formatDateTime } from "@/lib/format";
+import { brandDisplay, formatDateTime } from "@/lib/format";
 import type { AdminSurveyRow } from "@/lib/adminQueries";
 
 export function SurveyTable({ rows }: { rows: AdminSurveyRow[] }) {
@@ -18,7 +18,7 @@ export function SurveyTable({ rows }: { rows: AdminSurveyRow[] }) {
               <td><Link href={`/survey/${r.id}`} className="block">{r.shop_name}</Link></td>
               <td>{r.market}</td>
               <td>{r.shop_size}</td>
-              <td>{r.most_selling_fan}</td>
+              <td>{brandDisplay(r.most_selling_fan, r.most_selling_fan_other)}</td>
             </tr>
           ))}
         </tbody>
