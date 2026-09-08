@@ -16,7 +16,7 @@
     "seed:admin": "tsx --env-file=.env.local scripts/seed-admin.ts"
   },
   "dependencies": {
-    "next": "15.1.6",
+    "next": "15.5.25",
     "react": "19.0.0",
     "react-dom": "19.0.0",
     "@supabase/supabase-js": "2.48.1",
@@ -47,6 +47,6 @@
     "@playwright/test": "1.49.1",
     "tsx": "4.19.2",
     "eslint": "8.57.1",
-    "eslint-config-next": "15.1.6"
+    "eslint-config-next": "15.5.25"
   }
 }
