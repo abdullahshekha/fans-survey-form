@@ -19,18 +19,19 @@ surveys, per-rep counts, filters, CSV/XLSX export, a map, and comparison charts.
 
 - **Live on Vercel**, deployed from the `master` branch (every push to `master`
   auto-deploys). Default branch is `master`, not `main`.
-- Backed by a hosted Supabase project. Migrations `0001`–`0005` are applied;
+- Backed by a hosted Supabase project. Migrations `0001`–`0006` are applied
+  (`0006` was run via the Supabase SQL Editor, so it is **not** in
+  `supabase_migrations.schema_migrations` — same caveat as `0005`, see below);
   buckets exist and are private; an admin account is seeded.
-- **`0006` (rep survey editing) is committed but NOT yet applied to hosted.**
-  Apply it via the Supabase SQL Editor (`docs/DEPLOYMENT.md` Step 2c) and
-  hand-verify the `update_survey` happy path + a deactivated-rep reject before
-  the app code that depends on it ships. The SQL has never run against a real
-  Postgres.
 - **Verified:** `npm test` (111 unit tests), `npx tsc --noEmit`, `npm run build`,
   and manual end-to-end (rep submits a survey → admin sees it) on the live URL.
 - **Not yet run:** `npm run test:integration` and `npm run e2e` — the suites are
   written but have never executed against a real Supabase. Higher value now that
   `0006` adds the `update_survey` RPC and the rep-edit RLS/storage policies.
+- **Known follow-up:** `0007` should add a `profiles.active` check to the six
+  `0006` rep policies on `survey_photos` / `storage.objects` — today a
+  deactivated rep can still delete their own media via a direct API call (the
+  `update_survey` RPC path is already active-gated; this is the direct-call gap).
 
 ## Stack
 
@@ -136,10 +137,12 @@ Local dev reads `.env.local` (git-ignored). `npm run dev` loads it automatically
   exists` before each `create policy`, `create or replace function`). For any
   further schema change add a new numbered migration (e.g., `0007_*.sql`) — do
   not edit an applied file. Migrations are append-only.
-- **`0005` was applied to hosted via the Supabase SQL Editor,** which does not
-  record it in `supabase_migrations.schema_migrations`. Before ever running
-  `supabase db push` against the hosted project, insert that row (see
-  `docs/DEPLOYMENT.md` Step 2b) or `db push` will re-run `0005`.
+- **`0005` and `0006` were applied to hosted via the Supabase SQL Editor,** which
+  does not record them in `supabase_migrations.schema_migrations`. Before ever
+  running `supabase db push` against the hosted project, insert **both** rows
+  (see `docs/DEPLOYMENT.md` Steps 2b / 2c) or `db push` will re-run `0005` and
+  `0006`. Both are idempotent-guarded, so a re-run is harmless, but the ledger
+  should still be synced.
 
 ## Testing
 
