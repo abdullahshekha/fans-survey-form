@@ -85,7 +85,8 @@ app/        login, dashboard, survey/new, survey/[id],
             admin/{overview,surveys,map,users,housekeeping}, admin/surveys/export
 components/  shared UI + form/ + admin/
 lib/         supabase clients, constants, validation, geo, compression, audio,
-            adminQueries, aggregations, exportSurveys, submitSurvey, upload
+            adminQueries, aggregations, exportSurveys, submitSurvey, upload,
+            format (date + `brandDisplay` — folds an `'Other'` brand's typed name)
 middleware.ts  auth + role + active-account route protection
 supabase/   migrations/ (0001–0005), seed.sql (local dev only), config.toml
 scripts/    seed-admin.ts
@@ -114,9 +115,14 @@ Local dev reads `.env.local` (git-ignored). `npm run dev` loads it automatically
   `admin` / `rep.one` / `rep.two`, password `test-pass-123`).
 - Seed a real admin against whatever `.env.local` points to: `npm run seed:admin`
   (idempotent — re-run to reset the password).
-- **Migrations `0002`–`0004` were edited in place before first deploy.** For any
-  further schema change add a new numbered migration (e.g., `0006_*.sql`) — do
-  not edit an applied file. Migrations are append-only.
+- **Migrations `0002`–`0004` were edited in place before first deploy;** `0005`
+  (Survey Form v2) is idempotent-guarded (`if [not] exists`). For any further
+  schema change add a new numbered migration (e.g., `0006_*.sql`) — do not edit
+  an applied file. Migrations are append-only.
+- **`0005` was applied to hosted via the Supabase SQL Editor,** which does not
+  record it in `supabase_migrations.schema_migrations`. Before ever running
+  `supabase db push` against the hosted project, insert that row (see
+  `docs/DEPLOYMENT.md` Step 2b) or `db push` will re-run `0005`.
 
 ## Testing
 
@@ -135,8 +141,14 @@ Local dev reads `.env.local` (git-ignored). `npm run dev` loads it automatically
 
 ## Known follow-ups (non-blocking)
 
-- Run the integration + e2e suites once against a local Supabase.
+- Run the integration + e2e suites once against a local Supabase. Higher value
+  now that `0005` is live — it is the only thing that exercises the `*_other`
+  pairing CHECKs and the `create_survey` `v_quotation` guard.
 - `resetRepPassword` server action exists but has no UI button in the Users tab.
+- Survey Form v2 polish: brand validation errors are generic ("Select a brand" /
+  "Invalid brand") rather than field-specific; no test pins that an exactly
+  40-char "Other" name passes; `PhotoCapture` shares one notice/`busy` between
+  inner and quotation photos.
 - react-leaflet was upgraded 4→5; the maps render but a fresh browser check of
   `/admin/map` and `/survey/new` after any Leaflet-related change is worthwhile.
 - `supabase/config.toml` is minimal/hand-written; regenerate with `supabase init`
