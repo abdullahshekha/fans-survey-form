@@ -132,7 +132,7 @@ export function buildSurveyPayload(
     photos: [
       { kind: "front", storage_path: paths.front, sort_order: 0 },
       ...paths.inner.map((p, i) => ({ kind: "inner" as const, storage_path: p, sort_order: i })),
-      ...paths.quotation.map((p, i) => ({ kind: "quotation" as const, storage_path: p, sort_order: i })),
+      ...(paths.quotation ?? []).map((p, i) => ({ kind: "quotation" as const, storage_path: p, sort_order: i })),
     ],
   };
 }

@@ -18,8 +18,10 @@ const v: SurveyFormValues = {
   customer_name: "B", customer_number: "03001234567",
   gps: { lat: 24.86, lng: 67.02, accuracy: 10 },
   most_selling_fan: "GFC", rec_30w_1: "Tamoor", rec_30w_2: "", rec_50w_1: "Royal", rec_50w_2: "",
+  most_selling_fan_other: "", rec_30w_1_other: "", rec_30w_2_other: "", rec_50w_1_other: "", rec_50w_2_other: "",
   frontPhoto: new File(["x"], "front.jpg", { type: "image/jpeg" }),
   innerPhotos: [new File(["x"], "a.jpg", { type: "image/jpeg" }), new File(["y"], "b.jpg", { type: "image/jpeg" })],
+  quotationPhotos: [],
   audio: null,
 };
 

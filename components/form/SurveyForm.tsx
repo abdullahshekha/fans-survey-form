@@ -11,7 +11,8 @@ import { validateSurvey, type SurveyFormValues, type GpsFix } from "@/lib/valida
 const EMPTY: SurveyFormValues = {
   shop_name: "", market: "", shop_size: "", customer_name: "", customer_number: "",
   gps: null, most_selling_fan: "", rec_30w_1: "", rec_30w_2: "", rec_50w_1: "", rec_50w_2: "",
-  frontPhoto: null, innerPhotos: [], audio: null,
+  most_selling_fan_other: "", rec_30w_1_other: "", rec_30w_2_other: "", rec_50w_1_other: "", rec_50w_2_other: "",
+  frontPhoto: null, innerPhotos: [], quotationPhotos: [], audio: null,
 };
 
 export function SurveyForm({ onSubmit, onDirty }: { onSubmit: (v: SurveyFormValues) => Promise<void>; onDirty?: () => void }) {
