@@ -58,9 +58,10 @@ export function SurveyForm({ onSubmit, onDirty }: { onSubmit: (v: SurveyFormValu
 
       <div data-region="photos" data-invalid={errors.frontPhoto || errors.innerPhotos ? "true" : undefined}>
         <PhotoCapture
-          front={v.frontPhoto} inner={v.innerPhotos}
+          front={v.frontPhoto} inner={v.innerPhotos} quotation={v.quotationPhotos}
           onFrontChange={(f) => set("frontPhoto", f)}
           onInnerChange={(files) => set("innerPhotos", files)}
+          onQuotationChange={(f) => set("quotationPhotos", f)}
         />
         {errors.frontPhoto ? <span role="alert" className="text-xs text-red-600">{errors.frontPhoto}</span> : null}
         {errors.innerPhotos ? <span role="alert" className="block text-xs text-red-600">{errors.innerPhotos}</span> : null}

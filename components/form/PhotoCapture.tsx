@@ -1,13 +1,15 @@
 "use client";
 import { useMemo, useRef, useState } from "react";
-import { compressImage } from "@/lib/compression";
-import { MAX_INNER_PHOTOS } from "@/lib/constants";
+import { compressImage, compressDocument } from "@/lib/compression";
+import { MAX_INNER_PHOTOS, MAX_QUOTATION_PHOTOS } from "@/lib/constants";
 
 interface Props {
   front: File | null;
   inner: File[];
+  quotation: File[];
   onFrontChange: (f: File | null) => void;
   onInnerChange: (files: File[]) => void;
+  onQuotationChange: (files: File[]) => void;
 }
 
 function Thumb({ file, onRemove }: { file: File; onRemove: () => void }) {
@@ -21,7 +23,7 @@ function Thumb({ file, onRemove }: { file: File; onRemove: () => void }) {
   );
 }
 
-export function PhotoCapture({ front, inner, onFrontChange, onInnerChange }: Props) {
+export function PhotoCapture({ front, inner, quotation, onFrontChange, onInnerChange, onQuotationChange }: Props) {
   const [notice, setNotice] = useState("");
   const busy = useRef(false);
 
@@ -30,21 +32,33 @@ export function PhotoCapture({ front, inner, onFrontChange, onInnerChange }: Pro
     onFrontChange(await compressImage(files[0]));
   }
 
-  async function handleInner(files: FileList | null) {
+  async function addPhotos(
+    files: FileList | null,
+    current: File[],
+    max: number,
+    compress: (f: File) => Promise<File>,
+    onChange: (files: File[]) => void,
+    noun: string,
+  ) {
     if (!files || busy.current) return;
     busy.current = true;
     try {
-      const room = MAX_INNER_PHOTOS - inner.length;
-      if (room <= 0) { setNotice(`You can attach a maximum of ${MAX_INNER_PHOTOS} inner photos.`); return; }
+      const room = max - current.length;
+      if (room <= 0) { setNotice(`You can attach a maximum of ${max} ${noun}.`); return; }
       const picked = Array.from(files).slice(0, room);
-      if (picked.length < files.length) setNotice(`Only ${room} more inner photo(s) could be added (max ${MAX_INNER_PHOTOS}).`);
+      if (picked.length < files.length) setNotice(`Only ${room} more ${noun} could be added (max ${max}).`);
       else setNotice("");
-      const compressed = await Promise.all(picked.map(compressImage));
-      onInnerChange([...inner, ...compressed]);
+      const compressed = await Promise.all(picked.map(compress));
+      onChange([...current, ...compressed]);
     } finally {
       busy.current = false;
     }
   }
+
+  const handleInner = (files: FileList | null) =>
+    addPhotos(files, inner, MAX_INNER_PHOTOS, compressImage, onInnerChange, "inner photos");
+  const handleQuotation = (files: FileList | null) =>
+    addPhotos(files, quotation, MAX_QUOTATION_PHOTOS, compressDocument, onQuotationChange, "quotation photos");
 
   return (
     <div className="flex flex-col gap-4">
@@ -83,6 +97,27 @@ export function PhotoCapture({ front, inner, onFrontChange, onInnerChange }: Pro
         <div className="flex flex-wrap gap-2">
           {inner.map((f, i) => (
             <Thumb key={`${f.name}-${i}`} file={f} onRemove={() => onInnerChange(inner.filter((_, j) => j !== i))} />
+          ))}
+        </div>
+      </div>
+
+      <div className="flex flex-col gap-2">
+        <span className="text-sm font-medium">Quotation photo — optional ({quotation.length}/{MAX_QUOTATION_PHOTOS})</span>
+        <div className="flex gap-2">
+          <label className="rounded-lg bg-slate-800 px-3 py-2 text-sm text-white">
+            Take photo
+            <input data-testid="quotation-camera-input" type="file" accept="image/*" capture="environment" hidden
+              onChange={(e) => handleQuotation(e.target.files)} />
+          </label>
+          <label className="rounded-lg border border-slate-300 px-3 py-2 text-sm">
+            Choose from gallery
+            <input data-testid="quotation-gallery-input" type="file" accept="image/*" multiple hidden
+              onChange={(e) => handleQuotation(e.target.files)} />
+          </label>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          {quotation.map((f, i) => (
+            <Thumb key={`${f.name}-${i}`} file={f} onRemove={() => onQuotationChange(quotation.filter((_, j) => j !== i))} />
           ))}
         </div>
       </div>
