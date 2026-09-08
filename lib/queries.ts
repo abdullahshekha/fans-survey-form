@@ -6,13 +6,14 @@ export type SurveyListItem = {
   shop_name: string;
   market: Market;
   created_at: string;
+  edited_at: string | null;
   front_thumb_path: string | null;
 };
 
 export async function getRepSurveys(supabase: SupabaseClient, repId: string): Promise<SurveyListItem[]> {
   const { data, error } = await supabase
     .from("surveys")
-    .select("id, shop_name, market, created_at, survey_photos!inner(storage_path, kind)")
+    .select("id, shop_name, market, created_at, edited_at, survey_photos!inner(storage_path, kind)")
     .eq("rep_id", repId)
     .order("created_at", { ascending: false });
   if (error) throw error;
@@ -21,6 +22,7 @@ export async function getRepSurveys(supabase: SupabaseClient, repId: string): Pr
     shop_name: row.shop_name,
     market: row.market,
     created_at: row.created_at,
+    edited_at: row.edited_at ?? null,
     front_thumb_path: row.survey_photos?.find((p: any) => p.kind === "front")?.storage_path ?? null,
   }));
 }

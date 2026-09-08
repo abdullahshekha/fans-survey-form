@@ -42,7 +42,10 @@ export default async function DashboardPage() {
               className="flex items-center justify-between rounded-lg border border-slate-200 bg-white px-4 py-3">
               <span>
                 <span className="block font-medium">{s.shop_name}</span>
-                <span className="block text-xs text-slate-500">{s.market} · {relativeDate(s.created_at)}</span>
+                <span className="block text-xs text-slate-500">
+                  {s.market} · {relativeDate(s.created_at)}
+                  {s.edited_at ? <span className="ml-1 text-amber-700">· Edited</span> : null}
+                </span>
               </span>
               <span aria-hidden className="text-slate-300">›</span>
             </Link>
