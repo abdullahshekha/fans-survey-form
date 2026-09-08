@@ -40,9 +40,9 @@ describe("getSignedMediaUrls", () => {
 
     const res = await getSignedMediaUrls("sid");
     expect(res.photos).toEqual([
-      { kind: "front", url: "https://x/front" },
-      { kind: "inner", url: "https://x/inner0" },
-      { kind: "quotation", url: "https://x/quote" },
+      { kind: "front", url: "https://x/front", storagePath: "uid/sid/front.jpg" },
+      { kind: "inner", url: "https://x/inner0", storagePath: "uid/sid/inner-0.jpg" },
+      { kind: "quotation", url: "https://x/quote", storagePath: "uid/sid/quotation-0.jpg" },
     ]);
     expect(res.audio).toBe("https://x/audio");
   });
