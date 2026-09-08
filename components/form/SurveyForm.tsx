@@ -2,10 +2,11 @@
 import { useState } from "react";
 import { TextField } from "./TextField";
 import { SelectField } from "./SelectField";
+import { BrandField } from "./BrandField";
 import { GpsCapture } from "./GpsCapture";
 import { PhotoCapture } from "./PhotoCapture";
 import { VoiceRecorder } from "./VoiceRecorder";
-import { BRANDS, MARKETS, SHOP_SIZES } from "@/lib/constants";
+import { MARKETS, SHOP_SIZES } from "@/lib/constants";
 import { validateSurvey, type SurveyFormValues, type GpsFix } from "@/lib/validation";
 
 const EMPTY: SurveyFormValues = {
@@ -56,7 +57,7 @@ export function SurveyForm({ onSubmit, onDirty }: { onSubmit: (v: SurveyFormValu
         {errors.gps ? <span role="alert" className="text-xs text-red-600">{errors.gps}</span> : null}
       </div>
 
-      <div data-region="photos" data-invalid={errors.frontPhoto || errors.innerPhotos ? "true" : undefined}>
+      <div data-region="photos" data-invalid={errors.frontPhoto || errors.innerPhotos || errors.quotationPhotos ? "true" : undefined}>
         <PhotoCapture
           front={v.frontPhoto} inner={v.innerPhotos} quotation={v.quotationPhotos}
           onFrontChange={(f) => set("frontPhoto", f)}
@@ -65,18 +66,29 @@ export function SurveyForm({ onSubmit, onDirty }: { onSubmit: (v: SurveyFormValu
         />
         {errors.frontPhoto ? <span role="alert" className="text-xs text-red-600">{errors.frontPhoto}</span> : null}
         {errors.innerPhotos ? <span role="alert" className="block text-xs text-red-600">{errors.innerPhotos}</span> : null}
+        {errors.quotationPhotos ? <span role="alert" className="block text-xs text-red-600">{errors.quotationPhotos}</span> : null}
       </div>
 
-      <SelectField label="Most selling fan" name="most_selling_fan" value={v.most_selling_fan}
-        onChange={(x) => set("most_selling_fan", x)} error={errors.most_selling_fan} options={BRANDS} placeholder="Select a brand" />
-      <SelectField label="30W — Recommend 1" name="rec_30w_1" value={v.rec_30w_1}
-        onChange={(x) => set("rec_30w_1", x)} error={errors.rec_30w_1} options={BRANDS} placeholder="Select a brand" />
-      <SelectField label="30W — Recommend 2 (optional)" name="rec_30w_2" value={v.rec_30w_2}
-        onChange={(x) => set("rec_30w_2", x)} error={errors.rec_30w_2} options={BRANDS} placeholder="None" />
-      <SelectField label="50W — Recommend 1" name="rec_50w_1" value={v.rec_50w_1}
-        onChange={(x) => set("rec_50w_1", x)} error={errors.rec_50w_1} options={BRANDS} placeholder="Select a brand" />
-      <SelectField label="50W — Recommend 2 (optional)" name="rec_50w_2" value={v.rec_50w_2}
-        onChange={(x) => set("rec_50w_2", x)} error={errors.rec_50w_2} options={BRANDS} placeholder="None" />
+      <BrandField label="Most selling fan" name="most_selling_fan"
+        value={v.most_selling_fan} otherValue={v.most_selling_fan_other}
+        onChange={(x) => set("most_selling_fan", x)} onOtherChange={(x) => set("most_selling_fan_other", x)}
+        error={errors.most_selling_fan || errors.most_selling_fan_other} />
+      <BrandField label="30W — Recommend 1" name="rec_30w_1"
+        value={v.rec_30w_1} otherValue={v.rec_30w_1_other}
+        onChange={(x) => set("rec_30w_1", x)} onOtherChange={(x) => set("rec_30w_1_other", x)}
+        error={errors.rec_30w_1 || errors.rec_30w_1_other} />
+      <BrandField label="30W — Recommend 2 (optional)" name="rec_30w_2" placeholder="None"
+        value={v.rec_30w_2} otherValue={v.rec_30w_2_other}
+        onChange={(x) => set("rec_30w_2", x)} onOtherChange={(x) => set("rec_30w_2_other", x)}
+        error={errors.rec_30w_2 || errors.rec_30w_2_other} />
+      <BrandField label="50W — Recommend 1" name="rec_50w_1"
+        value={v.rec_50w_1} otherValue={v.rec_50w_1_other}
+        onChange={(x) => set("rec_50w_1", x)} onOtherChange={(x) => set("rec_50w_1_other", x)}
+        error={errors.rec_50w_1 || errors.rec_50w_1_other} />
+      <BrandField label="50W — Recommend 2 (optional)" name="rec_50w_2" placeholder="None"
+        value={v.rec_50w_2} otherValue={v.rec_50w_2_other}
+        onChange={(x) => set("rec_50w_2", x)} onOtherChange={(x) => set("rec_50w_2_other", x)}
+        error={errors.rec_50w_2 || errors.rec_50w_2_other} />
 
       <div data-region="voice">
         <VoiceRecorder value={v.audio} onChange={(b) => set("audio", b)} />
