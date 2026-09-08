@@ -13,8 +13,14 @@ const valid: SurveyFormValues = {
   rec_30w_2: "",
   rec_50w_1: "Royal",
   rec_50w_2: "",
+  most_selling_fan_other: "",
+  rec_30w_1_other: "",
+  rec_30w_2_other: "",
+  rec_50w_1_other: "",
+  rec_50w_2_other: "",
   frontPhoto: new File(["x"], "front.jpg", { type: "image/jpeg" }),
   innerPhotos: [new File(["x"], "a.jpg", { type: "image/jpeg" })],
+  quotationPhotos: [],
   audio: null,
 };
 
@@ -42,6 +48,8 @@ describe("validateSurvey", () => {
       ...valid, shop_name: " ", market: "", shop_size: "", customer_name: "",
       customer_number: "abc", gps: null, most_selling_fan: "", rec_30w_1: "",
       rec_50w_1: "", frontPhoto: null, innerPhotos: [],
+      most_selling_fan_other: "", rec_30w_1_other: "", rec_30w_2_other: "",
+      rec_50w_1_other: "", rec_50w_2_other: "", quotationPhotos: [],
     });
     for (const k of ["shop_name","market","shop_size","customer_name","customer_number","gps","most_selling_fan","rec_30w_1","rec_50w_1","frontPhoto","innerPhotos"]) {
       expect(errs).toHaveProperty(k);
@@ -62,7 +70,7 @@ describe("validateSurvey", () => {
 describe("buildSurveyPayload", () => {
   it("normalizes phone and maps photo paths", () => {
     const p = buildSurveyPayload("11111111-1111-1111-1111-111111111111", valid, {
-      front: "uid/sid/front.jpg", inner: ["uid/sid/inner-0.jpg"], audio: null,
+      front: "uid/sid/front.jpg", inner: ["uid/sid/inner-0.jpg"], quotation: [], audio: null,
     });
     expect(p.id).toBe("11111111-1111-1111-1111-111111111111");
     expect(p.customer_number).toBe("03001234567");
@@ -71,6 +79,54 @@ describe("buildSurveyPayload", () => {
     expect(p.photos).toEqual([
       { kind: "front", storage_path: "uid/sid/front.jpg", sort_order: 0 },
       { kind: "inner", storage_path: "uid/sid/inner-0.jpg", sort_order: 0 },
+    ]);
+  });
+});
+
+describe("Other brand", () => {
+  it("accepts a real brand with no _other text", () => {
+    expect(validateSurvey({ ...valid, most_selling_fan: "GFC", most_selling_fan_other: "" })).toEqual({});
+  });
+  it("requires the typed name when the field is Other", () => {
+    const e = validateSurvey({ ...valid, most_selling_fan: "Other", most_selling_fan_other: "  " });
+    expect(e.most_selling_fan_other).toMatch(/brand name/i);
+    expect(e.most_selling_fan).toBeUndefined();
+  });
+  it("accepts Other + a name, trims it in the payload", () => {
+    expect(validateSurvey({ ...valid, most_selling_fan: "Other", most_selling_fan_other: " Fanco " })).toEqual({});
+    const p = buildSurveyPayload("11111111-1111-1111-1111-111111111111",
+      { ...valid, most_selling_fan: "Other", most_selling_fan_other: " Fanco " },
+      { front: "u/s/front.jpg", inner: ["u/s/inner-0.jpg"], quotation: [], audio: null });
+    expect(p.most_selling_fan).toBe("Other");
+    expect(p.most_selling_fan_other).toBe("Fanco");
+    expect(p.rec_30w_1_other).toBeNull();
+  });
+  it("rejects an Other name longer than 40 chars", () => {
+    const e = validateSurvey({ ...valid, rec_30w_1: "Other", rec_30w_1_other: "x".repeat(41) });
+    expect(e.rec_30w_1_other).toMatch(/40/);
+  });
+  it("still allows a blank optional recommendation", () => {
+    expect(validateSurvey({ ...valid, rec_30w_2: "", rec_30w_2_other: "" })).toEqual({});
+  });
+});
+
+describe("quotation photos", () => {
+  const img = (n: string) => new File([new Uint8Array(4)], n, { type: "image/jpeg" });
+  it("0 is fine", () => {
+    expect(validateSurvey({ ...valid, quotationPhotos: [] })).toEqual({});
+  });
+  it("errors above the cap of 2", () => {
+    const e = validateSurvey({ ...valid, quotationPhotos: [img("a"), img("b"), img("c")] });
+    expect(e.quotationPhotos).toMatch(/2 quotation/i);
+  });
+  it("maps quotation paths into the payload", () => {
+    const p = buildSurveyPayload("11111111-1111-1111-1111-111111111111", valid,
+      { front: "u/s/front.jpg", inner: ["u/s/inner-0.jpg"], quotation: ["u/s/quotation-0.jpg", "u/s/quotation-1.jpg"], audio: null });
+    expect(p.photos).toEqual([
+      { kind: "front", storage_path: "u/s/front.jpg", sort_order: 0 },
+      { kind: "inner", storage_path: "u/s/inner-0.jpg", sort_order: 0 },
+      { kind: "quotation", storage_path: "u/s/quotation-0.jpg", sort_order: 0 },
+      { kind: "quotation", storage_path: "u/s/quotation-1.jpg", sort_order: 1 },
     ]);
   });
 });
