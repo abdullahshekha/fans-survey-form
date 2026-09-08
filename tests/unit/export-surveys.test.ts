@@ -2,7 +2,7 @@ import { describe, it, expect } from "vitest";
 import { toExportRows, buildCsv } from "@/lib/exportSurveys";
 
 const survey = {
-  id: "s1", created_at: "2026-09-05T10:00:00Z",
+  id: "s1", created_at: "2026-09-05T10:00:00Z", edited_at: "2026-09-06T09:00:00Z",
   shop_name: 'Al "Madina"', market: "Malir", shop_size: "Large",
   customer_name: "Bilal, Jr", customer_number: "03001234567",
   most_selling_fan: "Other", most_selling_fan_other: "Fanco",
@@ -41,6 +41,14 @@ describe("export", () => {
     expect(row.rec_30w_1).toBe("Tamoor");
     expect(row.rec_30w_2).toBe("");
     expect(row.quotation_photo_urls).toBe("https://x/q0");
+  });
+
+  it("includes edited_at (blank when never edited)", () => {
+    const [edited] = toExportRows([survey], signed);
+    expect(edited.edited_at).toBe("2026-09-06T09:00:00Z");
+    const [fresh] = toExportRows([{ ...survey, edited_at: null }], signed);
+    expect(fresh.edited_at).toBe("");
+    expect(buildCsv([fresh]).split("\n")[0].split(",")[1]).toBe("edited_at");
   });
 
   it("quotes fields containing quotes, commas, and newlines in CSV", () => {

@@ -28,6 +28,7 @@ export function buildSurveyQuery(query: any, f: SurveyFilter) {
 export interface AdminSurveyRow {
   id: string;
   created_at: string;
+  edited_at: string | null;
   rep_username: string;
   shop_name: string;
   market: string;
@@ -41,7 +42,7 @@ export async function getSurveysPage(db: any, f: SurveyFilter): Promise<{ rows: 
   const base = db
     .from("surveys")
     .select(
-      "id, created_at, shop_name, market, shop_size, most_selling_fan, most_selling_fan_other, profiles!surveys_rep_id_fkey(username), survey_photos(kind, storage_path, sort_order)",
+      "id, created_at, edited_at, shop_name, market, shop_size, most_selling_fan, most_selling_fan_other, profiles!surveys_rep_id_fkey(username), survey_photos(kind, storage_path, sort_order)",
       { count: "exact" },
     );
   const { data, count, error } = await buildSurveyQuery(base, f);
@@ -49,6 +50,7 @@ export async function getSurveysPage(db: any, f: SurveyFilter): Promise<{ rows: 
   const rows: AdminSurveyRow[] = (data ?? []).map((r: any) => ({
     id: r.id,
     created_at: r.created_at,
+    edited_at: r.edited_at ?? null,
     rep_username: r.profiles?.username ?? "—",
     shop_name: r.shop_name,
     market: r.market,

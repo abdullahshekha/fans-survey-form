@@ -30,16 +30,15 @@ export async function GET(request: NextRequest) {
   const { data: surveys, error } = await buildSurveyQuery(base, filter);
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
-  const paths = new Set<string>();
+  const photoPaths = new Set<string>();
+  const audioPaths = new Set<string>();
   (surveys ?? []).forEach((s: any) => {
-    (s.survey_photos ?? []).forEach((p: any) => paths.add(p.storage_path));
-    if (s.audio_path) paths.add(s.audio_path);
+    (s.survey_photos ?? []).forEach((p: any) => photoPaths.add(p.storage_path));
+    if (s.audio_path) audioPaths.add(s.audio_path);
   });
-  const photoPaths = [...paths].filter((p) => !p.endsWith(".webm") && !p.endsWith(".mp4"));
-  const audioPaths = [...paths].filter((p) => p.endsWith(".webm") || p.endsWith(".mp4"));
   const signedByPath = new Map<string, string>();
-  if (photoPaths.length) {
-    const { data } = await db.storage.from("survey-photos").createSignedUrls(photoPaths, SIGNED_URL_TTL);
+  if (photoPaths.size) {
+    const { data } = await db.storage.from("survey-photos").createSignedUrls([...photoPaths], SIGNED_URL_TTL);
     (data ?? []).forEach((d: any) => d.signedUrl && signedByPath.set(d.path, d.signedUrl));
   }
   for (const p of audioPaths) {
