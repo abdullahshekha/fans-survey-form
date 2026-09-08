@@ -1,9 +1,20 @@
 import {
   BRANDS, MARKETS, SHOP_SIZES, MAX_INNER_PHOTOS,
   MAX_QUOTATION_PHOTOS, MAX_OTHER_BRAND_LEN, OTHER_BRAND,
+  MAX_AUDIO_UPLOAD_MB, ALLOWED_AUDIO_TYPES,
 } from "./constants";
 
 export interface GpsFix { lat: number; lng: number; accuracy: number | null }
+
+export type ExistingMedia = { storagePath: string; url: string };
+
+export function validateAudioUpload(file: File): string | null {
+  if (!(ALLOWED_AUDIO_TYPES as readonly string[]).includes(file.type))
+    return "Choose an audio file (mp3, m4a, wav, ogg, or webm).";
+  if (file.size > MAX_AUDIO_UPLOAD_MB * 1024 * 1024)
+    return `Audio must be ${MAX_AUDIO_UPLOAD_MB} MB or smaller.`;
+  return null;
+}
 
 export interface SurveyFormValues {
   shop_name: string;

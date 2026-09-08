@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest";
-import { normalizePhone, validateSurvey, buildSurveyPayload, type SurveyFormValues } from "@/lib/validation";
+import { normalizePhone, validateSurvey, buildSurveyPayload, validateAudioUpload, type SurveyFormValues } from "@/lib/validation";
+import { MAX_AUDIO_UPLOAD_MB } from "@/lib/constants";
 
 const valid: SurveyFormValues = {
   shop_name: "Al Madina Electronics",
@@ -128,5 +129,21 @@ describe("quotation photos", () => {
       { kind: "quotation", storage_path: "u/s/quotation-0.jpg", sort_order: 0 },
       { kind: "quotation", storage_path: "u/s/quotation-1.jpg", sort_order: 1 },
     ]);
+  });
+});
+
+describe("validateAudioUpload", () => {
+  const file = (type: string, bytes: number) =>
+    new File([new Uint8Array(bytes)], "n", { type });
+
+  it("accepts an audio file within the size cap", () => {
+    expect(validateAudioUpload(file("audio/mpeg", 5 * 1024 * 1024))).toBeNull();
+  });
+  it("rejects a non-audio type", () => {
+    expect(validateAudioUpload(file("application/pdf", 10))).toMatch(/audio file/i);
+  });
+  it("rejects a file over the cap", () => {
+    expect(validateAudioUpload(file("audio/wav", (MAX_AUDIO_UPLOAD_MB + 1) * 1024 * 1024)))
+      .toMatch(new RegExp(`${MAX_AUDIO_UPLOAD_MB} MB`));
   });
 });

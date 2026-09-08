@@ -19,6 +19,11 @@ export type ShopSize = (typeof SHOP_SIZES)[number];
 export const MAX_INNER_PHOTOS = 10;
 export const MAX_QUOTATION_PHOTOS = 2;
 export const MAX_AUDIO_SECONDS = 120;
+export const MAX_AUDIO_UPLOAD_MB = 25;
+export const ALLOWED_AUDIO_TYPES = [
+  "audio/webm", "audio/mp4", "audio/mpeg", "audio/aac",
+  "audio/ogg", "audio/wav", "audio/x-m4a",
+] as const;
 export const SIGNED_URL_TTL = 21600; // 6 hours
 
 export const MARKET_COLORS: Record<Market, string> = {
