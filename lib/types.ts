@@ -12,7 +12,7 @@ export interface Profile {
 export interface SurveyPhoto {
   id: string;
   survey_id: string;
-  kind: "front" | "inner";
+  kind: "front" | "inner" | "quotation";
   storage_path: string;
   sort_order: number;
 }
@@ -28,11 +28,16 @@ export interface Survey {
   gps_lat: number;
   gps_lng: number;
   gps_accuracy: number | null;
-  most_selling_fan: Brand;
-  rec_30w_1: Brand;
-  rec_30w_2: Brand | null;
-  rec_50w_1: Brand;
-  rec_50w_2: Brand | null;
+  most_selling_fan: Brand | "Other";
+  most_selling_fan_other: string | null;
+  rec_30w_1: Brand | "Other";
+  rec_30w_1_other: string | null;
+  rec_30w_2: Brand | "Other" | null;
+  rec_30w_2_other: string | null;
+  rec_50w_1: Brand | "Other";
+  rec_50w_1_other: string | null;
+  rec_50w_2: Brand | "Other" | null;
+  rec_50w_2_other: string | null;
   audio_path: string | null;
   created_at: string;
   updated_at: string;
