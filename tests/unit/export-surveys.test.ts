@@ -5,7 +5,11 @@ const survey = {
   id: "s1", created_at: "2026-09-05T10:00:00Z",
   shop_name: 'Al "Madina"', market: "Malir", shop_size: "Large",
   customer_name: "Bilal, Jr", customer_number: "03001234567",
-  most_selling_fan: "GFC", rec_30w_1: "Tamoor", rec_30w_2: null, rec_50w_1: "Royal", rec_50w_2: null,
+  most_selling_fan: "Other", most_selling_fan_other: "Fanco",
+  rec_30w_1: "Tamoor", rec_30w_1_other: null,
+  rec_30w_2: null, rec_30w_2_other: null,
+  rec_50w_1: "Royal", rec_50w_1_other: null,
+  rec_50w_2: null, rec_50w_2_other: null,
   gps_lat: 24.9, gps_lng: 67.1, gps_accuracy: 12,
   audio_path: "u/s1/comment.webm",
   profiles: { username: "rep.one" },
@@ -13,12 +17,14 @@ const survey = {
     { kind: "front", storage_path: "u/s1/front.jpg", sort_order: 0 },
     { kind: "inner", storage_path: "u/s1/inner-0.jpg", sort_order: 0 },
     { kind: "inner", storage_path: "u/s1/inner-1.jpg", sort_order: 1 },
+    { kind: "quotation", storage_path: "u/s1/quotation-0.jpg", sort_order: 0 },
   ],
 };
 const signed = new Map([
   ["u/s1/front.jpg", "https://x/front"],
   ["u/s1/inner-0.jpg", "https://x/i0"],
   ["u/s1/inner-1.jpg", "https://x/i1"],
+  ["u/s1/quotation-0.jpg", "https://x/q0"],
   ["u/s1/comment.webm", "https://x/audio"],
 ]);
 
@@ -31,6 +37,10 @@ describe("export", () => {
     expect(row.inner_photo_urls).toBe("https://x/i0\nhttps://x/i1");
     expect(row.voice_note_url).toBe("https://x/audio");
     expect(row.rec_30w_2).toBe("");
+    expect(row.most_selling_fan).toBe("Other: Fanco");
+    expect(row.rec_30w_1).toBe("Tamoor");
+    expect(row.rec_30w_2).toBe("");
+    expect(row.quotation_photo_urls).toBe("https://x/q0");
   });
 
   it("quotes fields containing quotes, commas, and newlines in CSV", () => {
