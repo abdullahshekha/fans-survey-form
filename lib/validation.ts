@@ -87,7 +87,7 @@ function brandCheck(brand: string, other: string, optional: boolean): BrandField
   return null;
 }
 
-export function validateSurvey(v: SurveyFormValues): Record<string, string> {
+export function validateScalarFields(v: SurveyFormValues): Record<string, string> {
   const e: Record<string, string> = {};
   if (!v.shop_name.trim()) e.shop_name = "Shop name is required";
   if (!(MARKETS as readonly string[]).includes(v.market)) e.market = "Select a market";
@@ -105,11 +105,37 @@ export function validateSurvey(v: SurveyFormValues): Record<string, string> {
     const r = brandCheck(brand, other, optional);
     if (r) e[r.field === "self" ? name : `${name}_other`] = r.msg;
   }
+  return e;
+}
+
+export function audioUploadError(audio: Blob | null): string | null {
+  return audio instanceof File ? validateAudioUpload(audio) : null;
+}
+
+export function validateSurvey(v: SurveyFormValues): Record<string, string> {
+  const e = validateScalarFields(v);
   if (!v.frontPhoto) e.frontPhoto = "Add a front photo";
   if (v.innerPhotos.length < 1) e.innerPhotos = "Add at least one inner photo";
   else if (v.innerPhotos.length > MAX_INNER_PHOTOS) e.innerPhotos = `No more than ${MAX_INNER_PHOTOS} inner photos`;
   if (v.quotationPhotos.length > MAX_QUOTATION_PHOTOS)
     e.quotationPhotos = `No more than ${MAX_QUOTATION_PHOTOS} quotation photos`;
+  const a = audioUploadError(v.audio);
+  if (a) e.audio = a;
+  return e;
+}
+
+export function validateSurveyEdit(
+  v: SurveyFormValues,
+  counts: { front: number; inner: number; quotation: number },
+): Record<string, string> {
+  const e = validateScalarFields(v);
+  if (counts.front !== 1) e.frontPhoto = "Add a front photo";
+  if (counts.inner < 1) e.innerPhotos = "Add at least one inner photo";
+  else if (counts.inner > MAX_INNER_PHOTOS) e.innerPhotos = `No more than ${MAX_INNER_PHOTOS} inner photos`;
+  if (counts.quotation > MAX_QUOTATION_PHOTOS)
+    e.quotationPhotos = `No more than ${MAX_QUOTATION_PHOTOS} quotation photos`;
+  const a = audioUploadError(v.audio);
+  if (a) e.audio = a;
   return e;
 }
 

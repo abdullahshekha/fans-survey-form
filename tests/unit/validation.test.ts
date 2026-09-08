@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { normalizePhone, validateSurvey, buildSurveyPayload, validateAudioUpload, type SurveyFormValues } from "@/lib/validation";
+import { normalizePhone, validateSurvey, validateSurveyEdit, validateScalarFields, buildSurveyPayload, validateAudioUpload, type SurveyFormValues } from "@/lib/validation";
 import { MAX_AUDIO_UPLOAD_MB } from "@/lib/constants";
 
 const valid: SurveyFormValues = {
@@ -129,6 +129,42 @@ describe("quotation photos", () => {
       { kind: "quotation", storage_path: "u/s/quotation-0.jpg", sort_order: 0 },
       { kind: "quotation", storage_path: "u/s/quotation-1.jpg", sort_order: 1 },
     ]);
+  });
+});
+
+const goodScalars: SurveyFormValues = {
+  shop_name: "Al Madina", market: "Arambagh", shop_size: "Small",
+  customer_name: "B", customer_number: "03001234567",
+  gps: { lat: 24.86, lng: 67.02, accuracy: 10 },
+  most_selling_fan: "GFC", rec_30w_1: "Tamoor", rec_30w_2: "", rec_50w_1: "Royal", rec_50w_2: "",
+  most_selling_fan_other: "", rec_30w_1_other: "", rec_30w_2_other: "", rec_50w_1_other: "", rec_50w_2_other: "",
+  frontPhoto: null, innerPhotos: [], quotationPhotos: [], audio: null,
+};
+
+describe("validateSurveyEdit", () => {
+  it("passes when front is an existing photo and inner count >= 1", () => {
+    const e = validateSurveyEdit(goodScalars, { front: 1, inner: 2, quotation: 0 });
+    expect(e).toEqual({});
+  });
+  it("flags a missing front and empty inner set", () => {
+    const e = validateSurveyEdit(goodScalars, { front: 0, inner: 0, quotation: 0 });
+    expect(e.frontPhoto).toMatch(/front photo/i);
+    expect(e.innerPhotos).toMatch(/at least one/i);
+  });
+  it("caps inner at 10 and quotation at 2", () => {
+    const e = validateSurveyEdit(goodScalars, { front: 1, inner: 11, quotation: 3 });
+    expect(e.innerPhotos).toMatch(/no more than 10/i);
+    expect(e.quotationPhotos).toMatch(/no more than 2/i);
+  });
+  it("reuses the scalar checks", () => {
+    const e = validateSurveyEdit({ ...goodScalars, shop_name: "" }, { front: 1, inner: 1, quotation: 0 });
+    expect(e.shop_name).toBeTruthy();
+  });
+});
+
+describe("validateScalarFields", () => {
+  it("returns no errors for good scalars and ignores media", () => {
+    expect(validateScalarFields(goodScalars)).toEqual({});
   });
 });
 
