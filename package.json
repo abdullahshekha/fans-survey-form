@@ -13,7 +13,7 @@
     "e2e": "playwright test",
     "db:start": "supabase start",
     "db:reset": "supabase db reset",
-    "seed:admin": "tsx scripts/seed-admin.ts"
+    "seed:admin": "tsx --env-file=.env.local scripts/seed-admin.ts"
   },
   "dependencies": {
     "next": "15.1.6",
