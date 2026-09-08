@@ -40,6 +40,22 @@ describe("submitSurvey", () => {
     vi.unstubAllGlobals();
   });
 
+  it("uploads quotation photos and maps them into the payload", async () => {
+    uploadMock.mockClear();
+    rpcMock.mockClear();
+    uploadMock.mockResolvedValue({ error: null });
+    rpcMock.mockResolvedValue({ data: "generated-id", error: null });
+    vi.stubGlobal("crypto", { randomUUID: () => "abcd" });
+    const withQuote = { ...v, quotationPhotos: [new File(["q"], "q.jpg", { type: "image/jpeg" })] };
+    await submitSurvey(withQuote);
+    expect(uploadMock).toHaveBeenCalledTimes(4); // front + 2 inner + 1 quotation
+    const payload = rpcMock.mock.calls[0][1].payload;
+    expect(payload.photos).toContainEqual({
+      kind: "quotation", storage_path: "rep-uid-1/abcd/quotation-0.jpg", sort_order: 0,
+    });
+    vi.unstubAllGlobals();
+  });
+
   it("throws and does not call the RPC when an upload fails", async () => {
     uploadMock.mockResolvedValueOnce({ error: { message: "network" } });
     rpcMock.mockClear();
