@@ -19,12 +19,18 @@ surveys, per-rep counts, filters, CSV/XLSX export, a map, and comparison charts.
 
 - **Live on Vercel**, deployed from the `master` branch (every push to `master`
   auto-deploys). Default branch is `master`, not `main`.
-- Backed by a hosted Supabase project. Migrations `0001`–`0006` are applied;
+- Backed by a hosted Supabase project. Migrations `0001`–`0005` are applied;
   buckets exist and are private; an admin account is seeded.
+- **`0006` (rep survey editing) is committed but NOT yet applied to hosted.**
+  Apply it via the Supabase SQL Editor (`docs/DEPLOYMENT.md` Step 2c) and
+  hand-verify the `update_survey` happy path + a deactivated-rep reject before
+  the app code that depends on it ships. The SQL has never run against a real
+  Postgres.
 - **Verified:** `npm test` (111 unit tests), `npx tsc --noEmit`, `npm run build`,
   and manual end-to-end (rep submits a survey → admin sees it) on the live URL.
 - **Not yet run:** `npm run test:integration` and `npm run e2e` — the suites are
-  written but have never executed against a real Supabase. Worth doing once.
+  written but have never executed against a real Supabase. Higher value now that
+  `0006` adds the `update_survey` RPC and the rep-edit RLS/storage policies.
 
 ## Stack
 
