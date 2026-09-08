@@ -26,6 +26,7 @@ describe("getSignedMediaUrls", () => {
         survey_photos: [
           { kind: "front", storage_path: "uid/sid/front.jpg", sort_order: 0 },
           { kind: "inner", storage_path: "uid/sid/inner-0.jpg", sort_order: 0 },
+          { kind: "quotation", storage_path: "uid/sid/quotation-0.jpg", sort_order: 0 },
         ],
       },
       error: null,
@@ -33,6 +34,7 @@ describe("getSignedMediaUrls", () => {
     createSignedUrls.mockResolvedValue({ data: [
       { path: "uid/sid/front.jpg", signedUrl: "https://x/front" },
       { path: "uid/sid/inner-0.jpg", signedUrl: "https://x/inner0" },
+      { path: "uid/sid/quotation-0.jpg", signedUrl: "https://x/quote" },
     ], error: null });
     createSignedUrl.mockResolvedValue({ data: { signedUrl: "https://x/audio" }, error: null });
 
@@ -40,6 +42,7 @@ describe("getSignedMediaUrls", () => {
     expect(res.photos).toEqual([
       { kind: "front", url: "https://x/front" },
       { kind: "inner", url: "https://x/inner0" },
+      { kind: "quotation", url: "https://x/quote" },
     ]);
     expect(res.audio).toBe("https://x/audio");
   });
