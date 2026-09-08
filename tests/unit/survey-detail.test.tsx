@@ -33,4 +33,17 @@ describe("SurveyDetail v2", () => {
       media={{ photos: [{ kind: "front", url: "u/f" }, { kind: "quotation", url: "u/q" }], audio: null }} />);
     expect(screen.getByText("Quotation")).toBeInTheDocument();
   });
+
+  it("shows an Edit link only when canEdit is true", () => {
+    const { rerender } = render(<SurveyDetail survey={baseSurvey} media={{ photos: [], audio: null }} />);
+    expect(screen.queryByRole("link", { name: /edit survey/i })).not.toBeInTheDocument();
+    rerender(<SurveyDetail survey={baseSurvey} media={{ photos: [], audio: null }} canEdit />);
+    expect(screen.getByRole("link", { name: /edit survey/i })).toHaveAttribute("href", "/survey/s1/edit");
+  });
+
+  it("shows an Edited marker when edited_at is set", () => {
+    render(<SurveyDetail survey={{ ...baseSurvey, edited_at: "2026-09-08T12:00:00Z" }}
+      media={{ photos: [], audio: null }} />);
+    expect(screen.getByText(/edited/i)).toBeInTheDocument();
+  });
 });

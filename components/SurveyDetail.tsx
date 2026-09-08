@@ -1,7 +1,8 @@
+import Link from "next/link";
 import { MediaGallery } from "./MediaGallery";
 import { MiniMap } from "./MiniMap";
 import { DeleteSurveyButton } from "@/components/admin/DeleteSurveyButton";
-import { brandDisplay, formatDateTime } from "@/lib/format";
+import { brandDisplay, formatDateTime, relativeDate } from "@/lib/format";
 import type { SurveyWithRelations } from "@/lib/types";
 
 function Row({ label, value }: { label: string; value: React.ReactNode }) {
@@ -13,10 +14,11 @@ function Row({ label, value }: { label: string; value: React.ReactNode }) {
   );
 }
 
-export function SurveyDetail({ survey, media, canDelete }: {
+export function SurveyDetail({ survey, media, canDelete, canEdit }: {
   survey: SurveyWithRelations;
   media: { photos: { kind: "front" | "inner" | "quotation"; url: string }[]; audio: string | null };
   canDelete?: boolean;
+  canEdit?: boolean;
 }) {
   const mainPhotos = media.photos.filter((p) => p.kind !== "quotation");
   const quotationPhotos = media.photos.filter((p) => p.kind === "quotation");
@@ -27,6 +29,15 @@ export function SurveyDetail({ survey, media, canDelete }: {
         <p className="text-sm text-slate-500">
           {survey.market} · by {survey.rep.full_name} · {formatDateTime(survey.created_at)}
         </p>
+        {survey.edited_at ? (
+          <p className="text-xs text-amber-700">Edited · {relativeDate(survey.edited_at)}</p>
+        ) : null}
+        {canEdit ? (
+          <Link href={`/survey/${survey.id}/edit`}
+            className="mt-2 inline-block rounded-lg border border-slate-300 px-3 py-1.5 text-sm">
+            Edit survey
+          </Link>
+        ) : null}
       </header>
 
       <MediaGallery photos={mainPhotos} />
