@@ -41,6 +41,7 @@ export interface Survey {
   audio_path: string | null;
   created_at: string;
   updated_at: string;
+  edited_at: string | null;
 }
 
 export interface SurveyWithRelations extends Survey {
