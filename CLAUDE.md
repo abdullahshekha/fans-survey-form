@@ -19,9 +19,9 @@ surveys, per-rep counts, filters, CSV/XLSX export, a map, and comparison charts.
 
 - **Live on Vercel**, deployed from the `master` branch (every push to `master`
   auto-deploys). Default branch is `master`, not `main`.
-- Backed by a hosted Supabase project. Migrations `0001`–`0005` are applied;
+- Backed by a hosted Supabase project. Migrations `0001`–`0006` are applied;
   buckets exist and are private; an admin account is seeded.
-- **Verified:** `npm test` (81 unit tests), `npx tsc --noEmit`, `npm run build`,
+- **Verified:** `npm test` (108 unit tests), `npx tsc --noEmit`, `npm run build`,
   and manual end-to-end (rep submits a survey → admin sees it) on the live URL.
 - **Not yet run:** `npm run test:integration` and `npm run e2e` — the suites are
   written but have never executed against a real Supabase. Worth doing once.
@@ -47,9 +47,14 @@ surveys, per-rep counts, filters, CSV/XLSX export, a map, and comparison charts.
   and `scripts/seed-admin.ts`. Client (`"use client"`) code uses the anon key
   only. `lib/supabase/admin.ts` guards with a `typeof window` throw (no
   `import "server-only"` — it is also imported by the tsx seed script).
-- **Reps cannot update or delete surveys, or their own submitted media.** Enforced
-  by RLS + storage policies, not just UI. Only the admin edits/deletes surveys.
-  New rep accounts are created only by the admin.
+- **Reps can edit their own surveys** (all fields, no time limit) at
+  `/survey/[id]/edit` → the `update_survey` RPC, which mirrors `create_survey`'s
+  guards and stamps `surveys.edited_at`. Enforced at the DB layer:
+  `surveys_rep_update` / `survey_photos_rep_{update,delete}` RLS and storage
+  `survey_{photos,audio}_rep_{update,delete}` policies, all scoped to
+  `rep_id = auth.uid()` / the caller's own object prefix and all re-checking
+  `profiles.active`. Reps still **cannot** touch another rep's data, reassign
+  `rep_id`, or **delete a survey** — only the admin deletes.
 - **Deactivating a rep must bind at the DB layer.** `surveys_rep_insert` checks
   `profiles.active`; `is_admin()` checks `active`; middleware re-checks every
   request. Do not weaken any of these.
@@ -70,6 +75,9 @@ surveys, per-rep counts, filters, CSV/XLSX export, a map, and comparison charts.
   inner photos, most-selling fan, `rec_30w_1`, `rec_50w_1`. Everything else
   (both `rec_*_2`, voice note, quotation photos) is optional. Quotation photos:
   0–`MAX_QUOTATION_PHOTOS` = 2, stored as `survey_photos.kind = 'quotation'`.
+  An uploaded voice note (alternative to recording) must be an audio MIME type ≤
+  `MAX_AUDIO_UPLOAD_MB` (25 MB); enforced client-side (`validateAudioUpload`) and
+  by the `survey-audio` bucket's `file_size_limit` / `allowed_mime_types`.
 - **No offline support and no draft autosave.** Submitting needs a live
   connection; a failed submit writes nothing and the rep retries.
 - Login is **username + password**. Each account maps to a synthetic email
@@ -81,14 +89,15 @@ surveys, per-rep counts, filters, CSV/XLSX export, a map, and comparison charts.
 ## Layout
 
 ```
-app/        login, dashboard, survey/new, survey/[id],
+app/        login, dashboard, survey/new, survey/[id], survey/[id]/edit,
             admin/{overview,surveys,map,users,housekeeping}, admin/surveys/export
-components/  shared UI + form/ + admin/
+components/  shared UI + form/SurveyFields + form/SurveyEditForm + admin/
 lib/         supabase clients, constants, validation, geo, compression, audio,
-            adminQueries, aggregations, exportSurveys, submitSurvey, upload,
+            adminQueries, aggregations, exportSurveys, submitSurvey, updateSurvey,
+            uploadEditedMedia, upload,
             format (date + `brandDisplay` — folds an `'Other'` brand's typed name)
 middleware.ts  auth + role + active-account route protection
-supabase/   migrations/ (0001–0005), seed.sql (local dev only), config.toml
+supabase/   migrations/ (0001–0006), seed.sql (local dev only), config.toml
 scripts/    seed-admin.ts
 tests/      unit/ (vitest, run), integration/ + e2e/ (authored, not yet run)
 ```
@@ -116,9 +125,11 @@ Local dev reads `.env.local` (git-ignored). `npm run dev` loads it automatically
 - Seed a real admin against whatever `.env.local` points to: `npm run seed:admin`
   (idempotent — re-run to reset the password).
 - **Migrations `0002`–`0004` were edited in place before first deploy;** `0005`
-  (Survey Form v2) is idempotent-guarded (`if [not] exists`). For any further
-  schema change add a new numbered migration (e.g., `0006_*.sql`) — do not edit
-  an applied file. Migrations are append-only.
+  (Survey Form v2) is idempotent-guarded (`if [not] exists`). `0006` (rep survey
+  editing) is idempotent-guarded (`add column if not exists`, `drop policy if
+  exists` before each `create policy`, `create or replace function`). For any
+  further schema change add a new numbered migration (e.g., `0007_*.sql`) — do
+  not edit an applied file. Migrations are append-only.
 - **`0005` was applied to hosted via the Supabase SQL Editor,** which does not
   record it in `supabase_migrations.schema_migrations`. Before ever running
   `supabase db push` against the hosted project, insert that row (see

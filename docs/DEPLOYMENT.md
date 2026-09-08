@@ -53,6 +53,7 @@ This applies all migrations in `supabase/migrations/` in order:
 - `0003_storage.sql` — private storage bucket policies
 - `0004_create_survey.sql` — the `create_survey()` RPC function
 - `0005_survey_form_v2.sql` — "Other" brand support + quotation photos (see below)
+- `0006_survey_edit.sql` — rep survey editing + edited_at column + update_survey RPC (see below)
 
 > **⚠️ Important:** Do **not** run `supabase/seed.sql` in production. It contains test data and demo accounts. Seed data is for local development only.
 
@@ -87,6 +88,25 @@ If the app is already live and you are adding the "Other" brand feature + quotat
 
 > **Note:** Existing rows are unaffected — the `*_other` columns default to `null`, and no quotation photos exist until a new survey is submitted with them. The replaced RPC is fully backward-compatible.
 
+### Step 2c — Rep survey editing migration (0006)
+
+If the app is already live with 0005, migration 0006 must be applied to the hosted database **before** deploying the rep editing feature. The migration is backward-compatible; existing rows remain unaffected.
+
+Apply `0006` via the Supabase SQL Editor (as with `0005`), or via `supabase db push` only after the `0005` migration ledger row has been inserted (Step 2b) — otherwise `db push` re-runs `0005` then `0006`.
+
+1. In the Supabase dashboard, go to **SQL Editor** and open a new query.
+2. Copy the entire contents of `supabase/migrations/0006_survey_edit.sql` and paste it into the editor.
+3. Click **Run**. This will add the `edited_at` column to `surveys`, create RLS policies for rep editing, and add/replace the `update_survey()` RPC function.
+4. **Record the migration in the ledger.** Run this in the same SQL Editor:
+
+   ```sql
+   insert into supabase_migrations.schema_migrations (version, name)
+   values ('0006', 'survey_edit')
+   on conflict (version) do nothing;
+   ```
+
+5. Once complete, proceed to deploy the app code (push to `master` on Vercel).
+
 ## Step 3: Verify storage buckets
 
 1. Go to the Supabase dashboard → **Storage**.
@@ -95,6 +115,8 @@ If the app is already live and you are adding the "Other" brand feature + quotat
    - `survey-audio`
 
 Both are created by `0003_storage.sql` and should already be present if Step 2 completed successfully. Verify their **Privacy** setting is **Private** (not public).
+
+The `survey-audio` bucket has a `file_size_limit` of 25 MiB and an `allowed_mime_types` allowlist (set by migration `0006`) to enforce audio uploads. Verify these settings are configured if needed.
 
 ## Step 4: Configure Vercel environment variables
 
