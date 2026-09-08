@@ -52,19 +52,36 @@ This applies all migrations in `supabase/migrations/` in order:
 - `0002_rls.sql` — row-level security policies and `is_admin()` function
 - `0003_storage.sql` — private storage bucket policies
 - `0004_create_survey.sql` — the `create_survey()` RPC function
+- `0005_survey_form_v2.sql` — "Other" brand support + quotation photos (see below)
 
 > **⚠️ Important:** Do **not** run `supabase/seed.sql` in production. It contains test data and demo accounts. Seed data is for local development only.
 
-## Step 3: Verify storage buckets
+## Step 2b: Applying migration 0005 (Survey Form v2)
+
+If the app is already live and you are adding the "Other" brand feature + quotation photos, migration 0005 must be applied to the hosted database **before** deploying the app code. The migration is backward-compatible; existing rows remain unaffected.
+
+1. In the Supabase dashboard, go to **SQL Editor** and open a new query.
+2. Copy the entire contents of `supabase/migrations/0005_survey_form_v2.sql` and paste it into the editor.
+3. Click **Run**. This will:
+   - Add `'Other'` to all brand field `CHECK` constraints
+   - Add 5 companion `*_other` columns for typed brand names (with pairing `CHECK` constraints)
+   - Add `'quotation'` to the `survey_photos.kind` `CHECK` constraint
+   - Replace the `create_survey()` RPC to handle the new fields and validate them
+
+4. Once complete, proceed to deploy the app code (push to `master` on Vercel).
+
+> **Note:** Existing rows are unaffected — the `*_other` columns default to `null`, and no quotation photos exist until a new survey is submitted with them. The replaced RPC is fully backward-compatible.
+
+## Step 4: Verify storage buckets
 
 1. Go to the Supabase dashboard → **Storage**.
 2. Confirm that two private buckets exist:
    - `survey-photos`
    - `survey-audio`
 
-Both are created by `0003_storage.sql` and should already be present if step 2 completed successfully. Verify their **Privacy** setting is **Private** (not public).
+Both are created by `0003_storage.sql` and should already be present if Step 2 completed successfully. Verify their **Privacy** setting is **Private** (not public).
 
-## Step 4: Configure Vercel environment variables
+## Step 5: Configure Vercel environment variables
 
 1. Go to [vercel.com/dashboard](https://vercel.com/dashboard).
 2. Click **Import** (or use an existing project if already connected).
@@ -82,7 +99,7 @@ Both are created by `0003_storage.sql` and should already be present if step 2 c
 
 > **Security note:** `SUPABASE_SERVICE_ROLE_KEY` is a secret. Vercel will not expose it to the browser, only to the server. Treat it the same as a password.
 
-## Step 5: Seed the admin account in production
+## Step 6: Seed the admin account in production
 
 1. Locally, update `.env.local` to point to the production Supabase project:
 
@@ -107,21 +124,21 @@ This creates the initial admin account in the production database. The script us
 
 > **Note:** The seed script will only run if the account does not already exist. Running it multiple times is safe.
 
-## Step 6: Deploy and sign in
+## Step 7: Deploy and sign in
 
-1. Push your repository to the `main` branch (or your configured deployment branch):
+1. Push your repository to the `master` branch:
 
 ```bash
-git push origin main
+git push origin master
 ```
 
 Vercel automatically detects the push and deploys the app.
 
 2. Once deployment is complete, visit your production URL (displayed on the Vercel dashboard).
 
-3. Sign in with the admin account you created in Step 5:
+3. Sign in with the admin account you created in Step 6:
    - **Username:** `admin`
-   - **Password:** (the one you set in Step 5)
+   - **Password:** (the one you set in Step 6)
 
 4. From the admin dashboard, navigate to **Users** to create sales rep accounts.
    - Each rep will receive a username and temporary password (admin-generated).
