@@ -34,10 +34,16 @@ export async function updateSurvey(surveyId: string, input: SurveyEditInput): Pr
   const { error } = await supabase.rpc("update_survey", { payload });
   if (error) throw new Error(`Could not save your changes: ${error.message}`);
 
-  const kept = new Set<string>([paths.front, ...paths.inner, ...paths.quotation]);
-  const removedPhotos = input.originalPhotoPaths.filter((p) => !kept.has(p));
-  if (removedPhotos.length) await supabase.storage.from("survey-photos").remove(removedPhotos);
-  if (input.originalAudioPath && input.originalAudioPath !== paths.audio) {
-    await supabase.storage.from("survey-audio").remove([input.originalAudioPath]);
+  // Orphan cleanup is best-effort: the RPC has already committed. A failure here
+  // must not surface as a save error (spec §2.2 "Log, don't throw").
+  try {
+    const kept = new Set<string>([paths.front, ...paths.inner, ...paths.quotation]);
+    const removedPhotos = input.originalPhotoPaths.filter((p) => !kept.has(p));
+    if (removedPhotos.length) await supabase.storage.from("survey-photos").remove(removedPhotos);
+    if (input.originalAudioPath && input.originalAudioPath !== paths.audio) {
+      await supabase.storage.from("survey-audio").remove([input.originalAudioPath]);
+    }
+  } catch (e) {
+    console.warn("survey edit: orphan media cleanup failed", e);
   }
 }

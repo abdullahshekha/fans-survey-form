@@ -34,7 +34,7 @@ export async function uploadSurveyMedia(
 
   let audio: string | null = null;
   if (v.audio) {
-    const ext = v.audio.type.includes("mp4") ? "mp4" : "webm";
+    const ext = extFromAudioMime(v.audio.type);
     const p = `${base}/comment.${ext}`;
     const res = await supabase.storage.from(AUDIO_BUCKET).upload(p, v.audio, { contentType: v.audio.type });
     if (res.error) throw new Error(`Voice note upload failed: ${res.error.message}`);

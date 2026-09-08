@@ -62,6 +62,13 @@ describe("SurveyEditForm", () => {
     expect(onSaved).toHaveBeenCalled();
   });
 
+  it("calls onDirty when a field changes", async () => {
+    const onDirty = vi.fn();
+    render(<SurveyEditForm survey={survey} media={media} onSaved={vi.fn()} onDirty={onDirty} />);
+    await userEvent.type(screen.getByLabelText(/shop name/i), "x");
+    expect(onDirty).toHaveBeenCalled();
+  });
+
   it("blocks save when the only inner photo is removed", async () => {
     render(<SurveyEditForm survey={survey} media={media} onSaved={vi.fn()} />);
     await userEvent.click(screen.getByRole("button", { name: /remove r1\/s1\/inner-0\.jpg/i }));

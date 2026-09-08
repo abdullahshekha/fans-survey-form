@@ -56,6 +56,21 @@ describe("submitSurvey", () => {
     vi.unstubAllGlobals();
   });
 
+  it("stores an uploaded mp3 with a .mp3 extension, not comment.webm", async () => {
+    uploadMock.mockClear();
+    rpcMock.mockClear();
+    uploadMock.mockResolvedValue({ error: null });
+    rpcMock.mockResolvedValue({ data: "generated-id", error: null });
+    vi.stubGlobal("crypto", { randomUUID: () => "abcd" });
+    const withMp3 = { ...v, audio: new File([new Uint8Array(1)], "note.mp3", { type: "audio/mpeg" }) };
+    await submitSurvey(withMp3);
+    const audioCall = uploadMock.mock.calls.find((c) => String(c[0]).includes("comment."));
+    expect(audioCall?.[0]).toBe("rep-uid-1/abcd/comment.mp3");
+    const payload = rpcMock.mock.calls[0][1].payload;
+    expect(payload.audio_path.endsWith(".mp3")).toBe(true);
+    vi.unstubAllGlobals();
+  });
+
   it("throws and does not call the RPC when an upload fails", async () => {
     uploadMock.mockResolvedValueOnce({ error: { message: "network" } });
     rpcMock.mockClear();

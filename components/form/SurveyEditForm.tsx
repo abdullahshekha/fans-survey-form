@@ -39,11 +39,12 @@ const asExisting = (m: { url: string; storagePath: string }): ExistingMedia =>
   ({ url: m.url, storagePath: m.storagePath });
 
 export function SurveyEditForm({
-  survey, media, onSaved,
+  survey, media, onSaved, onDirty,
 }: {
   survey: SurveyWithRelations;
   media: EditMedia;
   onSaved: () => void;
+  onDirty?: () => void;
 }) {
   const [v, setV] = useState<SurveyFormValues>(() => initialValues(survey));
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -64,13 +65,16 @@ export function SurveyEditForm({
   );
   const [audioKept, setAudioKept] = useState<boolean>(!!media.audioUrl);
 
-  const set = <K extends keyof SurveyFormValues>(k: K, val: SurveyFormValues[K]) =>
+  const set = <K extends keyof SurveyFormValues>(k: K, val: SurveyFormValues[K]) => {
+    onDirty?.();
     setV((s) => ({ ...s, [k]: val }));
+  };
 
   function frontSlot(): MediaSlot {
     if (v.frontPhoto) return { file: v.frontPhoto };
     if (existingFront) return { keep: existingFront.storagePath };
-    return { file: undefined as unknown as File }; // guarded by validation (front count 0)
+    // handleSubmit returns early whenever counts.front !== 1, so this is unreachable.
+    throw new Error("unreachable: front photo missing at submit");
   }
   function listSlots(existing: ExistingMedia[], added: File[]): MediaSlot[] {
     return [...existing.map((e) => ({ keep: e.storagePath })), ...added.map((f) => ({ file: f }))];
@@ -138,9 +142,9 @@ export function SurveyEditForm({
               existingFront={existingFront}
               existingInner={existingInner}
               existingQuotation={existingQuotation}
-              onRemoveExistingFront={() => setExistingFront(null)}
-              onRemoveExistingInner={(sp) => setExistingInner((xs) => xs.filter((x) => x.storagePath !== sp))}
-              onRemoveExistingQuotation={(sp) => setExistingQuotation((xs) => xs.filter((x) => x.storagePath !== sp))}
+              onRemoveExistingFront={() => { onDirty?.(); setExistingFront(null); }}
+              onRemoveExistingInner={(sp) => { onDirty?.(); setExistingInner((xs) => xs.filter((x) => x.storagePath !== sp)); }}
+              onRemoveExistingQuotation={(sp) => { onDirty?.(); setExistingQuotation((xs) => xs.filter((x) => x.storagePath !== sp)); }}
             />
             {errors.frontPhoto ? <span role="alert" className="text-xs text-red-600">{errors.frontPhoto}</span> : null}
             {errors.innerPhotos ? <span role="alert" className="block text-xs text-red-600">{errors.innerPhotos}</span> : null}
@@ -153,7 +157,7 @@ export function SurveyEditForm({
               value={v.audio}
               onChange={(b) => set("audio", b)}
               existingUrl={audioKept ? media.audioUrl : null}
-              onClearExisting={() => setAudioKept(false)}
+              onClearExisting={() => { onDirty?.(); setAudioKept(false); }}
             />
             {errors.audio ? <span role="alert" className="block text-xs text-red-600">{errors.audio}</span> : null}
           </div>

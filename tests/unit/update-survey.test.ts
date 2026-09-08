@@ -48,6 +48,14 @@ describe("updateSurvey", () => {
     expect(removeMock).toHaveBeenCalledWith(["rep-uid-1/s1/comment.webm"]);
   });
 
+  it("resolves normally when orphan cleanup fails (non-fatal)", async () => {
+    rpcMock.mockResolvedValue({ data: "s1", error: null });
+    removeMock.mockClear();
+    removeMock.mockRejectedValue(new Error("network"));
+    await expect(updateSurvey("s1", baseInput)).resolves.toBeUndefined();
+    removeMock.mockResolvedValue({ error: null });
+  });
+
   it("throws and skips cleanup on an RPC error", async () => {
     rpcMock.mockResolvedValue({ data: null, error: { message: "not editable" } });
     removeMock.mockClear();
