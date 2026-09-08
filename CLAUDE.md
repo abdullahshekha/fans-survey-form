@@ -21,7 +21,7 @@ surveys, per-rep counts, filters, CSV/XLSX export, a map, and comparison charts.
   auto-deploys). Default branch is `master`, not `main`.
 - Backed by a hosted Supabase project. Migrations `0001`–`0005` are applied;
   buckets exist and are private; an admin account is seeded.
-- **Verified:** `npm test` (59 unit tests), `npx tsc --noEmit`, `npm run build`,
+- **Verified:** `npm test` (81 unit tests), `npx tsc --noEmit`, `npm run build`,
   and manual end-to-end (rep submits a survey → admin sees it) on the live URL.
 - **Not yet run:** `npm run test:integration` and `npm run e2e` — the suites are
   written but have never executed against a real Supabase. Worth doing once.
