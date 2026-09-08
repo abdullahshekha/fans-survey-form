@@ -22,15 +22,23 @@ describe("RLS", () => {
     expect(data).toEqual([]);
   });
 
-  it("rep cannot update a survey", async () => {
+  it("rep can update their own survey", async () => {
     const rep1 = await signInAs("rep.one@survey.local", "test-pass-123");
     const { error } = await rep1.from("surveys")
-      .update({ shop_name: "hacked" }).eq("id", "44444444-4444-4444-4444-444444444444");
-    // no update policy -> zero rows affected, treated as success with 0 rows
+      .update({ shop_name: "renamed by owner" }).eq("id", "44444444-4444-4444-4444-444444444444");
+    expect(error).toBeNull();
     const { data } = await serviceClient().from("surveys")
       .select("shop_name").eq("id", "44444444-4444-4444-4444-444444444444").single();
-    expect(data?.shop_name).toBe("s");
-    expect(error).toBeNull();
+    expect(data?.shop_name).toBe("renamed by owner");
+  });
+
+  it("rep cannot update another rep's survey", async () => {
+    const rep2 = await signInAs("rep.two@survey.local", "test-pass-123");
+    await rep2.from("surveys")
+      .update({ shop_name: "hacked" }).eq("id", "44444444-4444-4444-4444-444444444444");
+    const { data } = await serviceClient().from("surveys")
+      .select("shop_name").eq("id", "44444444-4444-4444-4444-444444444444").single();
+    expect(data?.shop_name).not.toBe("hacked");
   });
 
   it("rep cannot delete a survey", async () => {
