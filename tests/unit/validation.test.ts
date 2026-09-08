@@ -1,0 +1,76 @@
+import { describe, it, expect } from "vitest";
+import { normalizePhone, validateSurvey, buildSurveyPayload, type SurveyFormValues } from "@/lib/validation";
+
+const valid: SurveyFormValues = {
+  shop_name: "Al Madina Electronics",
+  market: "Arambagh",
+  shop_size: "Medium",
+  customer_name: "Bilal",
+  customer_number: "0300 1234567",
+  gps: { lat: 24.86, lng: 67.02, accuracy: 12 },
+  most_selling_fan: "GFC",
+  rec_30w_1: "Tamoor",
+  rec_30w_2: "",
+  rec_50w_1: "Royal",
+  rec_50w_2: "",
+  frontPhoto: new File(["x"], "front.jpg", { type: "image/jpeg" }),
+  innerPhotos: [new File(["x"], "a.jpg", { type: "image/jpeg" })],
+  audio: null,
+};
+
+describe("normalizePhone", () => {
+  it.each([
+    ["03001234567", "03001234567"],
+    ["0300 123 4567", "03001234567"],
+    ["+923001234567", "03001234567"],
+    ["+92 300 1234567", "03001234567"],
+  ])("accepts %s", (input, expected) => {
+    expect(normalizePhone(input)).toBe(expected);
+  });
+  it.each(["12345", "0300123456", "030012345678", "0421234567", ""])(
+    "rejects %s",
+    (input) => expect(normalizePhone(input)).toBeNull(),
+  );
+});
+
+describe("validateSurvey", () => {
+  it("passes a fully valid form", () => {
+    expect(validateSurvey(valid)).toEqual({});
+  });
+  it("flags every missing required field", () => {
+    const errs = validateSurvey({
+      ...valid, shop_name: " ", market: "", shop_size: "", customer_name: "",
+      customer_number: "abc", gps: null, most_selling_fan: "", rec_30w_1: "",
+      rec_50w_1: "", frontPhoto: null, innerPhotos: [],
+    });
+    for (const k of ["shop_name","market","shop_size","customer_name","customer_number","gps","most_selling_fan","rec_30w_1","rec_50w_1","frontPhoto","innerPhotos"]) {
+      expect(errs).toHaveProperty(k);
+    }
+  });
+  it("allows blank optional recommendations", () => {
+    expect(validateSurvey({ ...valid, rec_30w_2: "", rec_50w_2: "" })).toEqual({});
+  });
+  it("rejects an out-of-range optional recommendation", () => {
+    expect(validateSurvey({ ...valid, rec_30w_2: "Nonsense" })).toHaveProperty("rec_30w_2");
+  });
+  it("rejects more than 10 inner photos", () => {
+    const many = Array.from({ length: 11 }, (_, i) => new File(["x"], `${i}.jpg`, { type: "image/jpeg" }));
+    expect(validateSurvey({ ...valid, innerPhotos: many })).toHaveProperty("innerPhotos");
+  });
+});
+
+describe("buildSurveyPayload", () => {
+  it("normalizes phone and maps photo paths", () => {
+    const p = buildSurveyPayload("11111111-1111-1111-1111-111111111111", valid, {
+      front: "uid/sid/front.jpg", inner: ["uid/sid/inner-0.jpg"], audio: null,
+    });
+    expect(p.id).toBe("11111111-1111-1111-1111-111111111111");
+    expect(p.customer_number).toBe("03001234567");
+    expect(p.rec_30w_2).toBeNull();
+    expect(p.audio_path).toBeNull();
+    expect(p.photos).toEqual([
+      { kind: "front", storage_path: "uid/sid/front.jpg", sort_order: 0 },
+      { kind: "inner", storage_path: "uid/sid/inner-0.jpg", sort_order: 0 },
+    ]);
+  });
+});
