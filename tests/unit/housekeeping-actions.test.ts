@@ -5,7 +5,7 @@ vi.mock("@/lib/auth", () => ({ getSessionProfile: vi.fn() }));
 const countResult: { current: { count: number | null } } = { current: { count: 0 } };
 const ilikeResult: { current: { data: { name: string }[] | null } } = { current: { data: [] } };
 const insertMock = vi.fn(async () => ({ error: null }));
-const updateEqMock = vi.fn(async () => ({ error: null }));
+const updateEqMock = vi.fn(async (_vals: { name: string }, _oldName: string) => ({ error: null }));
 
 vi.mock("@/lib/supabase/admin", () => ({
   createAdminSupabase: () => ({
