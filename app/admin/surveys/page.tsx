@@ -1,5 +1,6 @@
 import { createAdminSupabase } from "@/lib/supabase/admin";
 import { getSurveysPage, PAGE_SIZE, type SurveyFilter } from "@/lib/adminQueries";
+import { getMarkets } from "@/lib/markets";
 import { SurveyFilterBar } from "@/components/admin/SurveyFilterBar";
 import { SurveyTable } from "@/components/admin/SurveyTable";
 import { ExportButton } from "@/components/admin/ExportButton";
@@ -18,6 +19,7 @@ export default async function AdminSurveysPage({ searchParams }: { searchParams:
 
   const db = createAdminSupabase();
   const { data: reps } = await db.from("profiles").select("id, username").eq("role", "rep").order("username");
+  const markets = await getMarkets(db);
   const { rows, total } = await getSurveysPage(db, filter);
   const page = filter.page ?? 0;
   const pages = Math.max(1, Math.ceil(total / PAGE_SIZE));
@@ -34,7 +36,7 @@ export default async function AdminSurveysPage({ searchParams }: { searchParams:
         <p className="text-sm text-slate-500">{total} survey(s)</p>
         <ExportButton filter={filter} />
       </div>
-      <SurveyFilterBar reps={reps ?? []} current={sp} />
+      <SurveyFilterBar markets={markets.map((m) => m.name)} reps={reps ?? []} current={sp} />
       <SurveyTable rows={rows} />
       <div className="mt-4 flex items-center justify-between text-sm">
         <a aria-disabled={page <= 0} href={qs(Math.max(0, page - 1))}

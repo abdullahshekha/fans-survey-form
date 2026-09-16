@@ -1,6 +1,5 @@
-import { MARKETS } from "@/lib/constants";
-
-export function SurveyFilterBar({ reps, current }: {
+export function SurveyFilterBar({ markets, reps, current }: {
+  markets: string[];
   reps: { id: string; username: string }[];
   current: Record<string, string>;
 }) {
@@ -9,7 +8,7 @@ export function SurveyFilterBar({ reps, current }: {
       <label className="flex flex-col text-xs font-medium">Market
         <select name="market" defaultValue={current.market ?? ""} className="mt-1 rounded border border-slate-300 px-2 py-1.5 text-sm">
           <option value="">All</option>
-          {MARKETS.map((m) => <option key={m} value={m}>{m}</option>)}
+          {markets.map((m) => <option key={m} value={m}>{m}</option>)}
         </select>
       </label>
       <label className="flex flex-col text-xs font-medium">Rep
