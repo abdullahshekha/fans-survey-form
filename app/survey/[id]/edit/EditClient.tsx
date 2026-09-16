@@ -5,9 +5,10 @@ import { SurveyEditForm } from "@/components/form/SurveyEditForm";
 import { useToast } from "@/components/Toast";
 import type { SurveyWithRelations } from "@/lib/types";
 
-export function EditClient({ survey, media }: {
+export function EditClient({ survey, media, markets }: {
   survey: SurveyWithRelations;
   media: { photos: { kind: "front" | "inner" | "quotation"; url: string; storagePath: string }[]; audioUrl: string | null };
+  markets: string[];
 }) {
   const router = useRouter();
   const toast = useToast();
@@ -23,6 +24,7 @@ export function EditClient({ survey, media }: {
     <SurveyEditForm
       survey={survey}
       media={media}
+      markets={markets}
       onDirty={() => { dirty.current = true; }}
       onSaved={() => {
         dirty.current = false;
