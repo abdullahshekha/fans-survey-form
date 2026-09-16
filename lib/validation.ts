@@ -1,5 +1,5 @@
 import {
-  BRANDS, MARKETS, SHOP_SIZES, MAX_INNER_PHOTOS,
+  BRANDS, SHOP_SIZES, MAX_INNER_PHOTOS,
   MAX_QUOTATION_PHOTOS, MAX_OTHER_BRAND_LEN, OTHER_BRAND,
   MAX_AUDIO_UPLOAD_MB, ALLOWED_AUDIO_TYPES,
 } from "./constants";
@@ -87,10 +87,10 @@ function brandCheck(brand: string, other: string, optional: boolean): BrandField
   return null;
 }
 
-export function validateScalarFields(v: SurveyFormValues): Record<string, string> {
+export function validateScalarFields(v: SurveyFormValues, markets: readonly string[]): Record<string, string> {
   const e: Record<string, string> = {};
   if (!v.shop_name.trim()) e.shop_name = "Shop name is required";
-  if (!(MARKETS as readonly string[]).includes(v.market)) e.market = "Select a market";
+  if (!markets.includes(v.market)) e.market = "Select a market";
   if (!(SHOP_SIZES as readonly string[]).includes(v.shop_size)) e.shop_size = "Select a shop size";
   if (!v.customer_name.trim()) e.customer_name = "Customer name is required";
   if (!normalizePhone(v.customer_number)) e.customer_number = "Enter a valid Pakistani mobile number";
@@ -112,8 +112,8 @@ export function audioUploadError(audio: Blob | null): string | null {
   return audio instanceof File ? validateAudioUpload(audio) : null;
 }
 
-export function validateSurvey(v: SurveyFormValues): Record<string, string> {
-  const e = validateScalarFields(v);
+export function validateSurvey(v: SurveyFormValues, markets: readonly string[]): Record<string, string> {
+  const e = validateScalarFields(v, markets);
   if (!v.frontPhoto) e.frontPhoto = "Add a front photo";
   if (v.innerPhotos.length < 1) e.innerPhotos = "Add at least one inner photo";
   else if (v.innerPhotos.length > MAX_INNER_PHOTOS) e.innerPhotos = `No more than ${MAX_INNER_PHOTOS} inner photos`;
@@ -127,8 +127,9 @@ export function validateSurvey(v: SurveyFormValues): Record<string, string> {
 export function validateSurveyEdit(
   v: SurveyFormValues,
   counts: { front: number; inner: number; quotation: number },
+  markets: readonly string[],
 ): Record<string, string> {
-  const e = validateScalarFields(v);
+  const e = validateScalarFields(v, markets);
   if (counts.front !== 1) e.frontPhoto = "Add a front photo";
   if (counts.inner < 1) e.innerPhotos = "Add at least one inner photo";
   else if (counts.inner > MAX_INNER_PHOTOS) e.innerPhotos = `No more than ${MAX_INNER_PHOTOS} inner photos`;
