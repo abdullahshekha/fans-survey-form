@@ -22,16 +22,23 @@ surveys, per-rep counts, filters, CSV/XLSX export, a map, and comparison charts.
 - Backed by a hosted Supabase project. Migrations `0001`–`0006` are applied
   (`0006` was run via the Supabase SQL Editor, so it is **not** in
   `supabase_migrations.schema_migrations` — same caveat as `0005`, see below);
-  buckets exist and are private; an admin account is seeded.
-- **Verified:** `npm test` (111 unit tests), `npx tsc --noEmit`, `npm run build`,
-  and manual end-to-end (rep submits a survey → admin sees it) on the live URL.
+  buckets exist and are private; an admin account is seeded. `0007_markets_table.sql`
+  (admin-managed markets) is written and committed but **not yet applied to
+  hosted** — apply it per `docs/DEPLOYMENT.md` Step 2d before deploying this
+  feature's app code.
+- **Verified:** `npm test` (127 unit tests), `npx tsc --noEmit`, `npm run build`.
+  Manual end-to-end (rep submits a survey → admin sees it) was verified on the
+  live URL before the markets-management work; re-verify after `0007` ships.
 - **Not yet run:** `npm run test:integration` and `npm run e2e` — the suites are
   written but have never executed against a real Supabase. Higher value now that
-  `0006` adds the `update_survey` RPC and the rep-edit RLS/storage policies.
-- **Known follow-up:** `0007` should add a `profiles.active` check to the six
-  `0006` rep policies on `survey_photos` / `storage.objects` — today a
+  `0006` adds the `update_survey` RPC and the rep-edit RLS/storage policies, and
+  `0007` adds the `markets` table RLS + rename-cascade behavior.
+- **Known follow-up:** a migration should add a `profiles.active` check to the
+  six `0006` rep policies on `survey_photos` / `storage.objects` — today a
   deactivated rep can still delete their own media via a direct API call (the
-  `update_survey` RPC path is already active-gated; this is the direct-call gap).
+  `update_survey` RPC path is already active-gated; this is the direct-call
+  gap). This was previously numbered `0007`; since `0007` is now the markets
+  migration, this follow-up becomes `0008` whenever it's implemented.
 
 ## Stack
 
@@ -68,15 +75,25 @@ surveys, per-rep counts, filters, CSV/XLSX export, a map, and comparison charts.
 - **Storage buckets are private.** Media reaches the browser only through
   short-lived signed URLs (`SIGNED_URL_TTL`, 6h) generated server-side. Never
   build a public storage URL.
-- **Fixed lists live in one place** (`lib/constants.ts`) and are mirrored by
-  Postgres `CHECK` constraints. Markets: Arambagh, MA Jinnah, Waterpump,
-  Bohrapir, Johar Mor, UP, Liaquatabad, Shah Faisal Colony, Orangi Town, Baldia
-  Town, Malir, Landhi/Korangi. Brands: Tamoor, Khurshid, SK, GFC, Royal, Pak
-  Fans, Lahore Fans, plus the free-text `"Other"` option. A brand field may hold
-  the literal `'Other'`, in which case its companion `<field>_other` column
-  holds the typed name (trimmed, 1–`MAX_OTHER_BRAND_LEN` = 40 chars, required
-  when the field is `'Other'`). Exports: `OTHER_BRAND`, `BRAND_SELECT_OPTIONS`.
-  Shop sizes: Small, Medium, Large.
+- **Markets are admin-managed**, not a fixed list. They live in
+  `public.markets` (`name` primary key, `color`, `sort_order`), fetched via
+  `lib/markets.ts`'s `getMarkets()` and threaded through every page/component
+  that needs them (no more static `MARKETS` import). `surveys.market` is a
+  foreign key to `markets(name)` with `on update cascade` (an admin rename is
+  retroactive — it updates every survey referencing that market, past and
+  future) and `on delete restrict` (no delete UI is built; the DB itself
+  blocks deleting a market that's in use). Only the admin can add/rename a
+  market (`app/admin/housekeeping/actions.ts`'s `addMarket`/`renameMarket`,
+  RLS-gated by `is_admin()`); any authenticated user can read the list. A new
+  market's color auto-assigns from `MARKET_COLOR_PALETTE` in
+  `lib/constants.ts`.
+- **Other fixed lists still live in one place** (`lib/constants.ts`) and are
+  mirrored by Postgres `CHECK` constraints. Brands: Tamoor, Khurshid, SK, GFC,
+  Royal, Pak Fans, Lahore Fans, plus the free-text `"Other"` option. A brand
+  field may hold the literal `'Other'`, in which case its companion
+  `<field>_other` column holds the typed name (trimmed, 1–`MAX_OTHER_BRAND_LEN`
+  = 40 chars, required when the field is `'Other'`). Exports: `OTHER_BRAND`,
+  `BRAND_SELECT_OPTIONS`. Shop sizes: Small, Medium, Large.
 - **Required survey fields:** shop name, market, shop size, customer name,
   customer number (Pakistani mobile `03XXXXXXXXX`), GPS, one front photo, 1–10
   inner photos, most-selling fan, `rec_30w_1`, `rec_50w_1`. Everything else
@@ -99,12 +116,13 @@ surveys, per-rep counts, filters, CSV/XLSX export, a map, and comparison charts.
 app/        login, dashboard, survey/new, survey/[id], survey/[id]/edit,
             admin/{overview,surveys,map,users,housekeeping}, admin/surveys/export
 components/  shared UI + form/SurveyFields + form/SurveyEditForm + admin/
+            (including admin/MarketsSection)
 lib/         supabase clients, constants, validation, geo, compression, audio,
             adminQueries, aggregations, exportSurveys, submitSurvey, updateSurvey,
-            uploadEditedMedia, upload,
+            uploadEditedMedia, upload, markets,
             format (date + `brandDisplay` — folds an `'Other'` brand's typed name)
 middleware.ts  auth + role + active-account route protection
-supabase/   migrations/ (0001–0006), seed.sql (local dev only), config.toml
+supabase/   migrations/ (0001–0007), seed.sql (local dev only), config.toml
 scripts/    seed-admin.ts
 tests/      unit/ (vitest, run), integration/ + e2e/ (authored, not yet run)
 ```
@@ -134,9 +152,12 @@ Local dev reads `.env.local` (git-ignored). `npm run dev` loads it automatically
 - **Migrations `0002`–`0004` were edited in place before first deploy;** `0005`
   (Survey Form v2) is idempotent-guarded (`if [not] exists`). `0006` (rep survey
   editing) is idempotent-guarded (`add column if not exists`, `drop policy if
-  exists` before each `create policy`, `create or replace function`). For any
-  further schema change add a new numbered migration (e.g., `0007_*.sql`) — do
-  not edit an applied file. Migrations are append-only.
+  exists` before each `create policy`, `create or replace function`). `0007`
+  (admin-managed markets) is idempotent-guarded (`create table if not exists`,
+  `on conflict do nothing`, `drop constraint/policy if exists` before
+  recreating). For any further schema change add a new numbered migration
+  (e.g., `0008_*.sql`) — do not edit an applied file. Migrations are
+  append-only.
 - **`0005` and `0006` were applied to hosted via the Supabase SQL Editor,** which
   does not record them in `supabase_migrations.schema_migrations`. Before ever
   running `supabase db push` against the hosted project, insert **both** rows

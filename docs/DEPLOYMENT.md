@@ -54,6 +54,9 @@ This applies all migrations in `supabase/migrations/` in order:
 - `0004_create_survey.sql` — the `create_survey()` RPC function
 - `0005_survey_form_v2.sql` — "Other" brand support + quotation photos (see below)
 - `0006_survey_edit.sql` — rep survey editing + edited_at column + update_survey RPC (see below)
+- `0007_markets_table.sql` — admin-managed markets: `markets` table, seeds the
+  12 current markets, `surveys.market` becomes a FK with `on update cascade` /
+  `on delete restrict` (see below)
 
 > **⚠️ Important:** Do **not** run `supabase/seed.sql` in production. It contains test data and demo accounts. Seed data is for local development only.
 
@@ -105,6 +108,29 @@ Apply `0006` via the Supabase SQL Editor (as with `0005`), or via `supabase db p
    on conflict (version) do nothing;
    ```
 
+5. Once complete, proceed to deploy the app code (push to `master` on Vercel).
+
+### Step 2d — Admin-managed markets migration (0007)
+
+If the app is already live with `0006`, migration `0007` must be applied to
+the hosted database **before** deploying the markets-management feature. The
+migration is backward-compatible; existing surveys keep their current market
+value (now enforced by a foreign key instead of a `CHECK`).
+
+Apply `0007` via the Supabase SQL Editor (as with `0005`/`0006`), or via
+`supabase db push` only after the `0005` and `0006` migration ledger rows have
+been inserted (Steps 2b/2c) — otherwise `db push` re-runs all three.
+
+1. Open the hosted project's SQL Editor.
+2. Copy the entire contents of `supabase/migrations/0007_markets_table.sql`
+   and paste it into the editor.
+3. Run it.
+4. **Record the migration in the ledger.** Run this in the same SQL Editor:
+   ```sql
+   insert into supabase_migrations.schema_migrations (version, name)
+   values ('0007', 'markets_table')
+   on conflict (version) do nothing;
+   ```
 5. Once complete, proceed to deploy the app code (push to `master` on Vercel).
 
 ## Step 3: Verify storage buckets
