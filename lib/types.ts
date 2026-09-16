@@ -1,4 +1,4 @@
-import type { Brand, Market, ShopSize } from "./constants";
+import type { Brand, ShopSize } from "./constants";
 
 export interface Profile {
   id: string;
@@ -21,7 +21,7 @@ export interface Survey {
   id: string;
   rep_id: string;
   shop_name: string;
-  market: Market;
+  market: string;
   shop_size: ShopSize;
   customer_name: string;
   customer_number: string;
