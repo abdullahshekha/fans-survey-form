@@ -12,7 +12,11 @@ const EMPTY: SurveyFormValues = {
   frontPhoto: null, innerPhotos: [], quotationPhotos: [], audio: null,
 };
 
-export function SurveyForm({ onSubmit, onDirty }: { onSubmit: (v: SurveyFormValues) => Promise<void>; onDirty?: () => void }) {
+export function SurveyForm({ onSubmit, onDirty, markets }: {
+  onSubmit: (v: SurveyFormValues) => Promise<void>;
+  onDirty?: () => void;
+  markets: string[];
+}) {
   const [v, setV] = useState<SurveyFormValues>(EMPTY);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [busy, setBusy] = useState(false);
@@ -23,7 +27,7 @@ export function SurveyForm({ onSubmit, onDirty }: { onSubmit: (v: SurveyFormValu
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    const errs = validateSurvey(v);
+    const errs = validateSurvey(v, markets);
     setErrors(errs);
     if (Object.keys(errs).length > 0) {
       document.querySelector('[aria-invalid="true"], [data-invalid="true"]')?.scrollIntoView({ behavior: "smooth", block: "center" });
@@ -41,6 +45,7 @@ export function SurveyForm({ onSubmit, onDirty }: { onSubmit: (v: SurveyFormValu
         v={v}
         set={set}
         errors={errors}
+        markets={markets}
         photos={
           <div data-region="photos" data-invalid={errors.frontPhoto || errors.innerPhotos || errors.quotationPhotos ? "true" : undefined}>
             <PhotoCapture

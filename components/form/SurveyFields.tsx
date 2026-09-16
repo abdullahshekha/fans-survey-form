@@ -4,15 +4,16 @@ import { TextField } from "./TextField";
 import { SelectField } from "./SelectField";
 import { BrandField } from "./BrandField";
 import { GpsCapture } from "./GpsCapture";
-import { MARKETS, SHOP_SIZES } from "@/lib/constants";
+import { SHOP_SIZES } from "@/lib/constants";
 import type { SurveyFormValues } from "@/lib/validation";
 
 export function SurveyFields({
-  v, set, errors, photos, voice,
+  v, set, errors, markets, photos, voice,
 }: {
   v: SurveyFormValues;
   set: <K extends keyof SurveyFormValues>(k: K, val: SurveyFormValues[K]) => void;
   errors: Record<string, string>;
+  markets: string[];
   photos: React.ReactNode;
   voice: React.ReactNode;
 }) {
@@ -21,7 +22,7 @@ export function SurveyFields({
       <TextField label="Shop name" name="shop_name" value={v.shop_name}
         onChange={(x) => set("shop_name", x)} error={errors.shop_name} />
       <SelectField label="Market" name="market" value={v.market}
-        onChange={(x) => set("market", x)} error={errors.market} options={MARKETS} placeholder="Choose a market" />
+        onChange={(x) => set("market", x)} error={errors.market} options={markets} placeholder="Choose a market" />
       <SelectField label="Shop size" name="shop_size" value={v.shop_size}
         onChange={(x) => set("shop_size", x)} error={errors.shop_size} options={SHOP_SIZES} placeholder="Select a size" />
       <TextField label="Customer name" name="customer_name" value={v.customer_name}

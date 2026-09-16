@@ -40,14 +40,14 @@ beforeEach(() => {
 
 describe("SurveyEditForm", () => {
   it("prefills scalar fields from the survey", () => {
-    render(<SurveyEditForm survey={survey} media={media} onSaved={vi.fn()} />);
+    render(<SurveyEditForm survey={survey} media={media} markets={["Arambagh"]} onSaved={vi.fn()} />);
     expect(screen.getByLabelText(/shop name/i)).toHaveValue("Al Madina");
     expect(screen.getByLabelText(/customer number/i)).toHaveValue("03001234567");
   });
 
   it("submits an update payload built from existing media plus edits", async () => {
     const onSaved = vi.fn();
-    render(<SurveyEditForm survey={survey} media={media} onSaved={onSaved} />);
+    render(<SurveyEditForm survey={survey} media={media} markets={["Arambagh"]} onSaved={onSaved} />);
     await userEvent.clear(screen.getByLabelText(/shop name/i));
     await userEvent.type(screen.getByLabelText(/shop name/i), "Renamed Shop");
     await userEvent.click(screen.getByRole("button", { name: /save changes/i }));
@@ -64,13 +64,13 @@ describe("SurveyEditForm", () => {
 
   it("calls onDirty when a field changes", async () => {
     const onDirty = vi.fn();
-    render(<SurveyEditForm survey={survey} media={media} onSaved={vi.fn()} onDirty={onDirty} />);
+    render(<SurveyEditForm survey={survey} media={media} markets={["Arambagh"]} onSaved={vi.fn()} onDirty={onDirty} />);
     await userEvent.type(screen.getByLabelText(/shop name/i), "x");
     expect(onDirty).toHaveBeenCalled();
   });
 
   it("blocks save when the only inner photo is removed", async () => {
-    render(<SurveyEditForm survey={survey} media={media} onSaved={vi.fn()} />);
+    render(<SurveyEditForm survey={survey} media={media} markets={["Arambagh"]} onSaved={vi.fn()} />);
     await userEvent.click(screen.getByRole("button", { name: /remove r1\/s1\/inner-0\.jpg/i }));
     await userEvent.click(screen.getByRole("button", { name: /save changes/i }));
     expect(updateSurveyMock).not.toHaveBeenCalled();

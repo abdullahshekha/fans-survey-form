@@ -5,7 +5,7 @@ import { EMPTY_SURVEY } from "@/components/form/SurveyForm";
 
 describe("SurveyFields", () => {
   it("renders every scalar field and both slots", () => {
-    render(<SurveyFields v={EMPTY_SURVEY} set={vi.fn()} errors={{}}
+    render(<SurveyFields v={EMPTY_SURVEY} set={vi.fn()} errors={{}} markets={["Arambagh", "Waterpump"]}
       photos={<div data-testid="photos-slot" />} voice={<div data-testid="voice-slot" />} />);
     expect(screen.getByLabelText(/shop name/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/market/i)).toBeInTheDocument();
