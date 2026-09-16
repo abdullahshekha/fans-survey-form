@@ -2,7 +2,11 @@ import { describe, it, expect } from "vitest";
 import {
   countByMarket, countByRep, countMostSellingFan, countRecommendedBrands, overviewStats,
 } from "@/lib/aggregations";
-import { MARKETS } from "@/lib/constants";
+
+const MARKET_NAMES = [
+  "Arambagh", "MA Jinnah", "Waterpump", "Bohrapir", "Johar Mor", "UP",
+  "Liaquatabad", "Shah Faisal Colony", "Orangi Town", "Baldia Town", "Malir", "Landhi/Korangi",
+];
 
 const surveys = [
   { market: "Malir", rep_username: "rep.one", most_selling_fan: "GFC", rec_30w_1: "GFC", rec_30w_2: "Tamoor", rec_50w_1: "GFC", rec_50w_2: null },
@@ -12,12 +16,17 @@ const surveys = [
 ];
 
 describe("aggregations", () => {
-  it("countByMarket returns all 12 markets in order with correct counts", () => {
-    const out = countByMarket(surveys);
+  it("countByMarket returns every given market in order with correct counts", () => {
+    const out = countByMarket(surveys, MARKET_NAMES);
     expect(out).toHaveLength(12);
-    expect(out.map((o) => o.label)).toEqual([...MARKETS]);
+    expect(out.map((o) => o.label)).toEqual(MARKET_NAMES);
     expect(out.find((o) => o.label === "Malir")!.value).toBe(2);
     expect(out.find((o) => o.label === "UP")!.value).toBe(1);
+  });
+
+  it("countByMarket reflects a shorter or reordered markets list", () => {
+    const out = countByMarket(surveys, ["UP", "Arambagh"]);
+    expect(out).toEqual([{ label: "UP", value: 1 }, { label: "Arambagh", value: 1 }]);
   });
 
   it("countByRep is sorted descending", () => {
