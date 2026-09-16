@@ -1,10 +1,9 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import type { Market } from "@/lib/constants";
 
 export type SurveyListItem = {
   id: string;
   shop_name: string;
-  market: Market;
+  market: string;
   created_at: string;
   edited_at: string | null;
   front_thumb_path: string | null;

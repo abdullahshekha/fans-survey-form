@@ -1,6 +1,7 @@
 import { notFound, redirect } from "next/navigation";
 import { getSessionProfile } from "@/lib/auth";
 import { createServerSupabase } from "@/lib/supabase/server";
+import { getMarkets } from "@/lib/markets";
 import { getSignedMediaUrls } from "../actions";
 import { EditClient } from "./EditClient";
 import type { SurveyWithRelations } from "@/lib/types";
@@ -22,6 +23,7 @@ export default async function EditSurveyPage({ params }: { params: Promise<{ id:
   if (data.rep_id !== profile.id) notFound();
 
   const signed = await getSignedMediaUrls(id);
+  const markets = await getMarkets(supabase);
 
   // If any photo row failed to mint a signed URL, do NOT render the edit form:
   // update_survey reconciles photos by delete+reinsert from the payload, so a
@@ -41,6 +43,7 @@ export default async function EditSurveyPage({ params }: { params: Promise<{ id:
     <EditClient
       survey={data as SurveyWithRelations}
       media={{ photos: signed.photos, audioUrl: signed.audio }}
+      markets={markets.map((m) => m.name)}
     />
   );
 }

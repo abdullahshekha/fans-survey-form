@@ -1,5 +1,6 @@
 import { createAdminSupabase } from "@/lib/supabase/admin";
 import { buildSurveyQuery, type SurveyFilter } from "@/lib/adminQueries";
+import { getMarkets } from "@/lib/markets";
 import { SurveyFilterBar } from "@/components/admin/SurveyFilterBar";
 import { SurveysMap, type MapPoint } from "@/components/SurveysMap";
 
@@ -15,6 +16,7 @@ export default async function AdminMapPage({ searchParams }: { searchParams: Pro
   };
   const db = createAdminSupabase();
   const { data: reps } = await db.from("profiles").select("id, username").eq("role", "rep").order("username");
+  const markets = await getMarkets(db);
   const base = db.from("surveys").select(
     "id, shop_name, market, gps_lat, gps_lng, created_at, profiles!surveys_rep_id_fkey(username)",
   );
@@ -26,8 +28,8 @@ export default async function AdminMapPage({ searchParams }: { searchParams: Pro
 
   return (
     <div>
-      <SurveyFilterBar reps={reps ?? []} current={sp} />
-      <SurveysMap points={points} />
+      <SurveyFilterBar markets={markets.map((m) => m.name)} reps={reps ?? []} current={sp} />
+      <SurveysMap points={points} markets={markets} />
     </div>
   );
 }

@@ -1,13 +1,13 @@
-import { BRANDS, MARKETS, OTHER_BRAND } from "./constants";
+import { BRANDS, OTHER_BRAND } from "./constants";
 
 type Datum = { label: string; value: number };
 
 const BRAND_BUCKETS = [...BRANDS, OTHER_BRAND];
 
-export function countByMarket(surveys: { market: string }[]): Datum[] {
-  const counts = new Map<string, number>(MARKETS.map((m) => [m, 0]));
+export function countByMarket(surveys: { market: string }[], markets: readonly string[]): Datum[] {
+  const counts = new Map<string, number>(markets.map((m) => [m, 0]));
   for (const s of surveys) counts.set(s.market, (counts.get(s.market) ?? 0) + 1);
-  return MARKETS.map((m) => ({ label: m, value: counts.get(m) ?? 0 }));
+  return markets.map((m) => ({ label: m, value: counts.get(m) ?? 0 }));
 }
 
 export function countByRep(surveys: { rep_username: string }[]): Datum[] {

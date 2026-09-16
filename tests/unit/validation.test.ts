@@ -2,6 +2,8 @@ import { describe, it, expect } from "vitest";
 import { normalizePhone, validateSurvey, validateSurveyEdit, validateScalarFields, buildSurveyPayload, validateAudioUpload, type SurveyFormValues } from "@/lib/validation";
 import { MAX_AUDIO_UPLOAD_MB } from "@/lib/constants";
 
+const MARKETS = ["Arambagh", "Malir"];
+
 const valid: SurveyFormValues = {
   shop_name: "Al Madina Electronics",
   market: "Arambagh",
@@ -42,7 +44,7 @@ describe("normalizePhone", () => {
 
 describe("validateSurvey", () => {
   it("passes a fully valid form", () => {
-    expect(validateSurvey(valid)).toEqual({});
+    expect(validateSurvey(valid, MARKETS)).toEqual({});
   });
   it("flags every missing required field", () => {
     const errs = validateSurvey({
@@ -51,20 +53,23 @@ describe("validateSurvey", () => {
       rec_50w_1: "", frontPhoto: null, innerPhotos: [],
       most_selling_fan_other: "", rec_30w_1_other: "", rec_30w_2_other: "",
       rec_50w_1_other: "", rec_50w_2_other: "", quotationPhotos: [],
-    });
+    }, MARKETS);
     for (const k of ["shop_name","market","shop_size","customer_name","customer_number","gps","most_selling_fan","rec_30w_1","rec_50w_1","frontPhoto","innerPhotos"]) {
       expect(errs).toHaveProperty(k);
     }
   });
   it("allows blank optional recommendations", () => {
-    expect(validateSurvey({ ...valid, rec_30w_2: "", rec_50w_2: "" })).toEqual({});
+    expect(validateSurvey({ ...valid, rec_30w_2: "", rec_50w_2: "" }, MARKETS)).toEqual({});
   });
   it("rejects an out-of-range optional recommendation", () => {
-    expect(validateSurvey({ ...valid, rec_30w_2: "Nonsense" })).toHaveProperty("rec_30w_2");
+    expect(validateSurvey({ ...valid, rec_30w_2: "Nonsense" }, MARKETS)).toHaveProperty("rec_30w_2");
   });
   it("rejects more than 10 inner photos", () => {
     const many = Array.from({ length: 11 }, (_, i) => new File(["x"], `${i}.jpg`, { type: "image/jpeg" }));
-    expect(validateSurvey({ ...valid, innerPhotos: many })).toHaveProperty("innerPhotos");
+    expect(validateSurvey({ ...valid, innerPhotos: many }, MARKETS)).toHaveProperty("innerPhotos");
+  });
+  it("rejects a market not in the given list", () => {
+    expect(validateSurvey({ ...valid, market: "Nowhere" }, MARKETS)).toHaveProperty("market");
   });
 });
 
@@ -86,15 +91,15 @@ describe("buildSurveyPayload", () => {
 
 describe("Other brand", () => {
   it("accepts a real brand with no _other text", () => {
-    expect(validateSurvey({ ...valid, most_selling_fan: "GFC", most_selling_fan_other: "" })).toEqual({});
+    expect(validateSurvey({ ...valid, most_selling_fan: "GFC", most_selling_fan_other: "" }, MARKETS)).toEqual({});
   });
   it("requires the typed name when the field is Other", () => {
-    const e = validateSurvey({ ...valid, most_selling_fan: "Other", most_selling_fan_other: "  " });
+    const e = validateSurvey({ ...valid, most_selling_fan: "Other", most_selling_fan_other: "  " }, MARKETS);
     expect(e.most_selling_fan_other).toMatch(/brand name/i);
     expect(e.most_selling_fan).toBeUndefined();
   });
   it("accepts Other + a name, trims it in the payload", () => {
-    expect(validateSurvey({ ...valid, most_selling_fan: "Other", most_selling_fan_other: " Fanco " })).toEqual({});
+    expect(validateSurvey({ ...valid, most_selling_fan: "Other", most_selling_fan_other: " Fanco " }, MARKETS)).toEqual({});
     const p = buildSurveyPayload("11111111-1111-1111-1111-111111111111",
       { ...valid, most_selling_fan: "Other", most_selling_fan_other: " Fanco " },
       { front: "u/s/front.jpg", inner: ["u/s/inner-0.jpg"], quotation: [], audio: null });
@@ -103,21 +108,21 @@ describe("Other brand", () => {
     expect(p.rec_30w_1_other).toBeNull();
   });
   it("rejects an Other name longer than 40 chars", () => {
-    const e = validateSurvey({ ...valid, rec_30w_1: "Other", rec_30w_1_other: "x".repeat(41) });
+    const e = validateSurvey({ ...valid, rec_30w_1: "Other", rec_30w_1_other: "x".repeat(41) }, MARKETS);
     expect(e.rec_30w_1_other).toMatch(/40/);
   });
   it("still allows a blank optional recommendation", () => {
-    expect(validateSurvey({ ...valid, rec_30w_2: "", rec_30w_2_other: "" })).toEqual({});
+    expect(validateSurvey({ ...valid, rec_30w_2: "", rec_30w_2_other: "" }, MARKETS)).toEqual({});
   });
 });
 
 describe("quotation photos", () => {
   const img = (n: string) => new File([new Uint8Array(4)], n, { type: "image/jpeg" });
   it("0 is fine", () => {
-    expect(validateSurvey({ ...valid, quotationPhotos: [] })).toEqual({});
+    expect(validateSurvey({ ...valid, quotationPhotos: [] }, MARKETS)).toEqual({});
   });
   it("errors above the cap of 2", () => {
-    const e = validateSurvey({ ...valid, quotationPhotos: [img("a"), img("b"), img("c")] });
+    const e = validateSurvey({ ...valid, quotationPhotos: [img("a"), img("b"), img("c")] }, MARKETS);
     expect(e.quotationPhotos).toMatch(/2 quotation/i);
   });
   it("maps quotation paths into the payload", () => {
@@ -143,28 +148,31 @@ const goodScalars: SurveyFormValues = {
 
 describe("validateSurveyEdit", () => {
   it("passes when front is an existing photo and inner count >= 1", () => {
-    const e = validateSurveyEdit(goodScalars, { front: 1, inner: 2, quotation: 0 });
+    const e = validateSurveyEdit(goodScalars, { front: 1, inner: 2, quotation: 0 }, MARKETS);
     expect(e).toEqual({});
   });
   it("flags a missing front and empty inner set", () => {
-    const e = validateSurveyEdit(goodScalars, { front: 0, inner: 0, quotation: 0 });
+    const e = validateSurveyEdit(goodScalars, { front: 0, inner: 0, quotation: 0 }, MARKETS);
     expect(e.frontPhoto).toMatch(/front photo/i);
     expect(e.innerPhotos).toMatch(/at least one/i);
   });
   it("caps inner at 10 and quotation at 2", () => {
-    const e = validateSurveyEdit(goodScalars, { front: 1, inner: 11, quotation: 3 });
+    const e = validateSurveyEdit(goodScalars, { front: 1, inner: 11, quotation: 3 }, MARKETS);
     expect(e.innerPhotos).toMatch(/no more than 10/i);
     expect(e.quotationPhotos).toMatch(/no more than 2/i);
   });
   it("reuses the scalar checks", () => {
-    const e = validateSurveyEdit({ ...goodScalars, shop_name: "" }, { front: 1, inner: 1, quotation: 0 });
+    const e = validateSurveyEdit({ ...goodScalars, shop_name: "" }, { front: 1, inner: 1, quotation: 0 }, MARKETS);
     expect(e.shop_name).toBeTruthy();
   });
 });
 
 describe("validateScalarFields", () => {
   it("returns no errors for good scalars and ignores media", () => {
-    expect(validateScalarFields(goodScalars)).toEqual({});
+    expect(validateScalarFields(goodScalars, MARKETS)).toEqual({});
+  });
+  it("rejects a market outside the given list", () => {
+    expect(validateScalarFields({ ...goodScalars, market: "Nowhere" }, MARKETS)).toHaveProperty("market");
   });
 });
 

@@ -39,10 +39,11 @@ const asExisting = (m: { url: string; storagePath: string }): ExistingMedia =>
   ({ url: m.url, storagePath: m.storagePath });
 
 export function SurveyEditForm({
-  survey, media, onSaved, onDirty,
+  survey, media, markets, onSaved, onDirty,
 }: {
   survey: SurveyWithRelations;
   media: EditMedia;
+  markets: string[];
   onSaved: () => void;
   onDirty?: () => void;
 }) {
@@ -94,7 +95,7 @@ export function SurveyEditForm({
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setFormError("");
-    const errs = validateSurveyEdit(v, counts);
+    const errs = validateSurveyEdit(v, counts, markets);
     setErrors(errs);
     if (Object.keys(errs).length > 0) {
       document.querySelector('[aria-invalid="true"], [data-invalid="true"]')
@@ -132,6 +133,7 @@ export function SurveyEditForm({
         v={v}
         set={set}
         errors={errors}
+        markets={markets}
         photos={
           <div data-region="photos" data-invalid={errors.frontPhoto || errors.innerPhotos || errors.quotationPhotos ? "true" : undefined}>
             <PhotoCapture

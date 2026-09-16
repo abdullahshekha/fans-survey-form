@@ -1,4 +1,5 @@
 import { createAdminSupabase } from "@/lib/supabase/admin";
+import { getMarkets } from "@/lib/markets";
 import { StatTile } from "@/components/StatTile";
 import { BarChartCard } from "@/components/BarChartCard";
 import {
@@ -7,6 +8,8 @@ import {
 
 export default async function AdminOverviewPage() {
   const db = createAdminSupabase();
+  const markets = await getMarkets(db);
+  const marketNames = markets.map((m) => m.name);
   const { data: raw } = await db.from("surveys").select(
     "market, most_selling_fan, rec_30w_1, rec_30w_2, rec_50w_1, rec_50w_2, profiles!surveys_rep_id_fkey(username)",
   );
@@ -21,10 +24,10 @@ export default async function AdminOverviewPage() {
       <div className="grid grid-cols-3 gap-3">
         <StatTile label="Total surveys" value={stats.totalSurveys} />
         <StatTile label="Active reps" value={activeReps ?? 0} />
-        <StatTile label="Markets covered" value={`${stats.marketsCovered} / 12`} />
+        <StatTile label="Markets covered" value={`${stats.marketsCovered} / ${marketNames.length}`} />
       </div>
       <div className="grid gap-4 md:grid-cols-2">
-        <BarChartCard title="Shop count by market" data={countByMarket(surveys)} />
+        <BarChartCard title="Shop count by market" data={countByMarket(surveys, marketNames)} />
         <BarChartCard title="Survey count by rep" data={countByRep(surveys)} />
         <BarChartCard title="Most selling fan" data={countMostSellingFan(surveys)} />
         <BarChartCard title="Recommended brands (30W + 50W)" data={countRecommendedBrands(surveys)} />
