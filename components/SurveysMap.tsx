@@ -103,10 +103,10 @@ export function SurveysMap({ points, markets, boundaries, betterHoldMarkets }: {
 
   return (
     <div className="flex flex-col gap-3">
-      <div className="h-[70vh] w-full overflow-hidden rounded-xl border border-slate-200">
+      <div className="h-[70vh] w-full overflow-hidden rounded-xl border border-slate-200 shadow-sm">
         <Inner points={points} colorByMarket={colorByMarket} boundaries={boundaries} starMarkets={starMarkets} />
       </div>
-      <ul className="flex flex-wrap gap-x-4 gap-y-1 text-xs">
+      <ul className="flex flex-wrap gap-x-4 gap-y-1 rounded-xl border border-slate-200 bg-white p-3 text-xs shadow-sm">
         {markets.map((m) => (
           <li key={m.name} className="flex items-center gap-1.5">
             <span className="inline-block h-3 w-3 rounded-full" style={{ background: m.color }} />

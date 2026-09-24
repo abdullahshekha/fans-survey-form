@@ -11,8 +11,8 @@ export function ExportButton({ filter }: { filter: SurveyFilter }) {
   const href = (fmt: string) => `/admin/surveys/export?format=${fmt}&${qs.toString()}`;
   return (
     <div className="flex gap-2">
-      <a href={href("csv")} className="rounded border border-slate-300 px-3 py-2 text-sm">Export CSV</a>
-      <a href={href("xlsx")} className="rounded border border-slate-300 px-3 py-2 text-sm">Export Excel</a>
+      <a href={href("csv")} className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50">Export CSV</a>
+      <a href={href("xlsx")} className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50">Export Excel</a>
     </div>
   );
 }

@@ -4,6 +4,7 @@ import { getMarkets } from "@/lib/markets";
 import { SurveyFilterBar } from "@/components/admin/SurveyFilterBar";
 import { SurveyTable } from "@/components/admin/SurveyTable";
 import { ExportButton } from "@/components/admin/ExportButton";
+import { SIGNED_URL_TTL } from "@/lib/constants";
 
 export default async function AdminSurveysPage({ searchParams }: { searchParams: Promise<Record<string, string>> }) {
   const sp = await searchParams;
@@ -24,6 +25,22 @@ export default async function AdminSurveysPage({ searchParams }: { searchParams:
   const page = filter.page ?? 0;
   const pages = Math.max(1, Math.ceil(total / PAGE_SIZE));
 
+  // One batch-sign call for every photo on the page, instead of one call per
+  // thumbnail — thumbnails render immediately rather than behind a click.
+  const allPaths = rows.flatMap((r) => r.photos.map((p) => p.storage_path));
+  const { data: signed } = allPaths.length
+    ? await db.storage.from("survey-photos").createSignedUrls(allPaths, SIGNED_URL_TTL)
+    : { data: [] as { path: string | null; signedUrl: string }[] };
+  const urlByPath = new Map((signed ?? []).map((s) => [s.path, s.signedUrl]));
+  const photosByRow = new Map(
+    rows.map((r) => [
+      r.id,
+      r.photos
+        .map((p) => ({ url: urlByPath.get(p.storage_path), kind: p.kind as string }))
+        .filter((p): p is { url: string; kind: string } => !!p.url),
+    ]),
+  );
+
   const qs = (p: number) => {
     const u = new URLSearchParams(sp as Record<string, string>);
     u.set("page", String(p));
@@ -32,18 +49,19 @@ export default async function AdminSurveysPage({ searchParams }: { searchParams:
 
   return (
     <div>
-      <div className="mb-3 flex items-center justify-between">
-        <p className="text-sm text-slate-500">{total} survey(s)</p>
+      <div className="mb-4 flex items-center justify-between">
+        <h1 className="text-xl font-semibold text-slate-900">Surveys</h1>
         <ExportButton filter={filter} />
       </div>
       <SurveyFilterBar markets={markets.map((m) => m.name)} reps={reps ?? []} current={sp} />
-      <SurveyTable rows={rows} />
-      <div className="mt-4 flex items-center justify-between text-sm">
+      <p className="mb-3 text-sm text-slate-500">{total} survey{total === 1 ? "" : "s"}</p>
+      <SurveyTable rows={rows} photosByRow={photosByRow} />
+      <div className="mt-6 flex items-center justify-between text-sm">
         <a aria-disabled={page <= 0} href={qs(Math.max(0, page - 1))}
-          className={`rounded border px-3 py-1.5 ${page <= 0 ? "pointer-events-none opacity-40" : ""}`}>Previous</a>
-        <span>Page {page + 1} of {pages}</span>
+          className={`rounded-lg border border-slate-300 bg-white px-3 py-1.5 font-medium text-slate-700 hover:bg-slate-50 ${page <= 0 ? "pointer-events-none opacity-40" : ""}`}>Previous</a>
+        <span className="text-slate-500">Page {page + 1} of {pages}</span>
         <a aria-disabled={page + 1 >= pages} href={qs(page + 1)}
-          className={`rounded border px-3 py-1.5 ${page + 1 >= pages ? "pointer-events-none opacity-40" : ""}`}>Next</a>
+          className={`rounded-lg border border-slate-300 bg-white px-3 py-1.5 font-medium text-slate-700 hover:bg-slate-50 ${page + 1 >= pages ? "pointer-events-none opacity-40" : ""}`}>Next</a>
       </div>
     </div>
   );

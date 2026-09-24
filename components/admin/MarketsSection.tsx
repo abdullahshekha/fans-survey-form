@@ -44,9 +44,9 @@ export function MarketsSection({ markets }: { markets: { name: string; color: st
   }
 
   return (
-    <div className="flex flex-col gap-3">
+    <div className="flex flex-col gap-4 rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
       <div>
-        <h2 className="text-base font-semibold">Markets</h2>
+        <h2 className="text-base font-semibold text-slate-900">Markets</h2>
         <p className="text-sm text-slate-500">
           Renaming a market updates it everywhere, including past surveys. Markets cannot be deleted here.
         </p>
@@ -54,7 +54,7 @@ export function MarketsSection({ markets }: { markets: { name: string; color: st
       {error ? <p role="alert" className="text-sm text-red-600">{error}</p> : null}
       <ul className="flex flex-col gap-2">
         {markets.map((m) => (
-          <li key={m.name} className="flex items-center gap-2 text-sm">
+          <li key={m.name} className="flex items-center gap-2 rounded-lg px-2 py-1.5 text-sm hover:bg-slate-50">
             <span className="inline-block h-3 w-3 shrink-0 rounded-full" style={{ background: m.color }} />
             {renaming === m.name ? (
               <>
@@ -62,14 +62,14 @@ export function MarketsSection({ markets }: { markets: { name: string; color: st
                   value={renameValue}
                   onChange={(e) => setRenameValue(e.target.value)}
                   aria-label={`Rename ${m.name}`}
-                  className="rounded border border-slate-300 px-2 py-1"
+                  className="rounded-lg border border-slate-300 px-2 py-1 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
                 />
                 <button disabled={pending} onClick={() => saveRename(m.name)}
-                  className="rounded bg-slate-900 px-2 py-1 text-xs text-white disabled:opacity-60">
+                  className="rounded-lg bg-brand-600 px-2.5 py-1 text-xs font-medium text-white hover:bg-brand-700 disabled:opacity-60">
                   Save
                 </button>
                 <button disabled={pending} onClick={() => setRenaming(null)}
-                  className="rounded border border-slate-300 px-2 py-1 text-xs">
+                  className="rounded-lg border border-slate-300 bg-white px-2.5 py-1 text-xs font-medium text-slate-700 hover:bg-slate-50">
                   Cancel
                 </button>
               </>
@@ -77,7 +77,7 @@ export function MarketsSection({ markets }: { markets: { name: string; color: st
               <>
                 <span className="flex-1">{m.name}</span>
                 <button disabled={pending} aria-label={`Rename ${m.name}`} onClick={() => beginRename(m.name)}
-                  className="rounded border border-slate-300 px-2 py-1 text-xs">
+                  className="rounded-lg border border-slate-300 bg-white px-2.5 py-1 text-xs font-medium text-slate-700 hover:bg-slate-50">
                   Rename
                 </button>
               </>
@@ -85,16 +85,16 @@ export function MarketsSection({ markets }: { markets: { name: string; color: st
           </li>
         ))}
       </ul>
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-2 border-t border-slate-100 pt-4">
         <input
           value={newName}
           onChange={(e) => setNewName(e.target.value)}
           placeholder="New market name"
           aria-label="New market name"
-          className="rounded border border-slate-300 px-2 py-1.5 text-sm"
+          className="rounded-lg border border-slate-300 px-3 py-1.5 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
         />
         <button disabled={pending || !newName.trim()} onClick={submitAdd}
-          className="rounded bg-slate-900 px-3 py-2 text-sm text-white disabled:opacity-60">
+          className="rounded-lg bg-brand-600 px-4 py-2 text-sm font-medium text-white hover:bg-brand-700 disabled:opacity-60">
           Add market
         </button>
       </div>

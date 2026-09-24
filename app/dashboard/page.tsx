@@ -30,7 +30,7 @@ export default async function DashboardPage() {
       </div>
 
       <Link href="/survey/new"
-        className="rounded-lg bg-slate-900 py-3 text-center text-base font-medium text-white">
+        className="rounded-lg bg-brand-600 hover:bg-brand-700 py-3 text-center text-base font-medium text-white">
         + New Survey
       </Link>
 

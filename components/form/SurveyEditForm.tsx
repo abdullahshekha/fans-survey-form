@@ -168,7 +168,7 @@ export function SurveyEditForm({
 
       <div className="fixed inset-x-0 bottom-0 border-t border-slate-200 bg-white p-4">
         <button type="submit" disabled={busy}
-          className="w-full rounded-lg bg-slate-900 py-3 text-base font-medium text-white disabled:opacity-60">
+          className="w-full rounded-lg bg-brand-600 hover:bg-brand-700 py-3 text-base font-medium text-white disabled:opacity-60">
           {busy ? "Saving…" : "Save changes"}
         </button>
       </div>

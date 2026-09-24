@@ -41,6 +41,7 @@ export default async function AdminMapPage({ searchParams }: { searchParams: Pro
 
   return (
     <div>
+      <h1 className="mb-4 text-xl font-semibold text-slate-900">Map</h1>
       <SurveyFilterBar markets={markets.map((m) => m.name)} reps={reps ?? []} current={sp} />
       <SurveysMap points={points} markets={markets} boundaries={boundaries} betterHoldMarkets={betterHoldMarkets} />
     </div>

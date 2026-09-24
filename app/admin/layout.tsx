@@ -1,15 +1,7 @@
-import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getSessionProfile } from "@/lib/auth";
 import { SignOutButton } from "@/components/SignOutButton";
-
-const TABS = [
-  { href: "/admin/overview", label: "Overview" },
-  { href: "/admin/surveys", label: "Surveys" },
-  { href: "/admin/map", label: "Map" },
-  { href: "/admin/users", label: "Users" },
-  { href: "/admin/housekeeping", label: "Housekeeping" },
-];
+import { AdminNav } from "@/components/admin/AdminNav";
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   const profile = await getSessionProfile();
@@ -17,20 +9,31 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   if (profile.role !== "admin") redirect("/dashboard");
 
   return (
-    <div className="mx-auto max-w-5xl p-4">
-      <header className="mb-4 flex items-center justify-between">
-        <h1 className="text-lg font-semibold">Fan Retailer Survey — Admin</h1>
-        <SignOutButton />
-      </header>
-      <nav className="mb-6 flex gap-1 border-b border-slate-200">
-        {TABS.map((t) => (
-          <Link key={t.href} href={t.href}
-            className="px-3 py-2 text-sm font-medium text-slate-600 hover:text-slate-900">
-            {t.label}
-          </Link>
-        ))}
-      </nav>
-      {children}
+    <div className="flex min-h-screen">
+      <aside className="hidden w-60 shrink-0 flex-col border-r border-slate-200 bg-white p-4 md:flex">
+        <div className="mb-6 px-1">
+          <p className="text-sm font-semibold leading-tight text-slate-900">Fan Retailer Survey</p>
+          <p className="text-xs text-slate-500">Admin</p>
+        </div>
+        <AdminNav />
+        <div className="mt-auto flex flex-col gap-2 border-t border-slate-200 pt-4">
+          <p className="px-1 text-xs text-slate-500">Signed in as {profile.username}</p>
+          <SignOutButton />
+        </div>
+      </aside>
+
+      <div className="flex min-w-0 flex-1 flex-col">
+        <header className="flex items-center justify-between border-b border-slate-200 bg-white px-4 py-3 md:hidden">
+          <p className="text-sm font-semibold">Fan Retailer Survey — Admin</p>
+          <SignOutButton />
+        </header>
+        <div className="border-b border-slate-200 bg-white px-4 md:hidden">
+          <AdminNav horizontal />
+        </div>
+        <main className="flex-1 px-4 py-6 md:px-8 md:py-8">
+          {children}
+        </main>
+      </div>
     </div>
   );
 }

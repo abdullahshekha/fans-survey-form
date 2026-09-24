@@ -24,7 +24,7 @@ export default function LoginPage() {
         </label>
         {state.error ? <p role="alert" className="text-sm text-red-600">{state.error}</p> : null}
         <button type="submit" disabled={pending}
-          className="rounded-lg bg-slate-900 px-4 py-2.5 text-base font-medium text-white disabled:opacity-60">
+          className="rounded-lg bg-brand-600 hover:bg-brand-700 px-4 py-2.5 text-base font-medium text-white disabled:opacity-60">
           {pending ? "Signing in…" : "Sign in"}
         </button>
       </form>

@@ -21,9 +21,9 @@ export function AudioPlayButton({ surveyId }: { surveyId: string }) {
             else setError(res.error ?? "Could not load voice note.");
           })
         }
-        className="rounded border border-slate-300 px-2 py-1 text-xs disabled:opacity-50"
+        className="rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50"
       >
-        {pending ? "Loading…" : "Play"}
+        {pending ? "Loading…" : "▶ Play voice note"}
       </button>
       {error ? <p className="text-xs text-red-700">{error}</p> : null}
     </div>

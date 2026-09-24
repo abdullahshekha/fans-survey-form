@@ -1,8 +1,8 @@
 "use client";
 import { Bar, BarChart, CartesianGrid, Cell, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 
-const DEFAULT_FILL = "#0f172a";
-const HIGHLIGHT_FILL = "#2563eb";
+const DEFAULT_FILL = "#1b5555";
+const HIGHLIGHT_FILL = "#d98e2b";
 
 export function BarChartCard({
   title,
@@ -14,8 +14,8 @@ export function BarChartCard({
   highlightLabel?: string;
 }) {
   return (
-    <div className="rounded-xl border border-slate-200 bg-white p-4">
-      <h3 className="mb-3 text-sm font-semibold">{title}</h3>
+    <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+      <h3 className="mb-3 text-sm font-semibold text-slate-700">{title}</h3>
       <div className="h-64">
         <ResponsiveContainer width="100%" height="100%">
           <BarChart data={data} margin={{ top: 4, right: 8, bottom: 40, left: 0 }}>

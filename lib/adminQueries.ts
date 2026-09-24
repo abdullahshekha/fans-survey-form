@@ -25,6 +25,12 @@ export function buildSurveyQuery(query: any, f: SurveyFilter) {
   return ordered.range(page * PAGE_SIZE, page * PAGE_SIZE + PAGE_SIZE - 1);
 }
 
+export interface AdminSurveyPhoto {
+  kind: "front" | "inner" | "quotation";
+  storage_path: string;
+  sort_order: number;
+}
+
 export interface AdminSurveyRow {
   id: string;
   created_at: string;
@@ -37,7 +43,10 @@ export interface AdminSurveyRow {
   most_selling_fan_other: string | null;
   front_thumb_path: string | null;
   audio_path: string | null;
+  photos: AdminSurveyPhoto[];
 }
+
+const PHOTO_KIND_RANK: Record<string, number> = { front: 0, inner: 1, quotation: 2 };
 
 export async function getSurveysPage(db: any, f: SurveyFilter): Promise<{ rows: AdminSurveyRow[]; total: number }> {
   const base = db
@@ -48,18 +57,25 @@ export async function getSurveysPage(db: any, f: SurveyFilter): Promise<{ rows: 
     );
   const { data, count, error } = await buildSurveyQuery(base, f);
   if (error) throw error;
-  const rows: AdminSurveyRow[] = (data ?? []).map((r: any) => ({
-    id: r.id,
-    created_at: r.created_at,
-    edited_at: r.edited_at ?? null,
-    rep_username: r.profiles?.username ?? "—",
-    shop_name: r.shop_name,
-    market: r.market,
-    shop_size: r.shop_size,
-    most_selling_fan: r.most_selling_fan,
-    most_selling_fan_other: r.most_selling_fan_other ?? null,
-    front_thumb_path: r.survey_photos?.find((p: any) => p.kind === "front")?.storage_path ?? null,
-    audio_path: r.audio_path ?? null,
-  }));
+  const rows: AdminSurveyRow[] = (data ?? []).map((r: any) => {
+    const photos: AdminSurveyPhoto[] = [...(r.survey_photos ?? [])].sort((a: any, b: any) =>
+      PHOTO_KIND_RANK[a.kind] === PHOTO_KIND_RANK[b.kind]
+        ? a.sort_order - b.sort_order
+        : PHOTO_KIND_RANK[a.kind] - PHOTO_KIND_RANK[b.kind]);
+    return {
+      id: r.id,
+      created_at: r.created_at,
+      edited_at: r.edited_at ?? null,
+      rep_username: r.profiles?.username ?? "—",
+      shop_name: r.shop_name,
+      market: r.market,
+      shop_size: r.shop_size,
+      most_selling_fan: r.most_selling_fan,
+      most_selling_fan_other: r.most_selling_fan_other ?? null,
+      front_thumb_path: photos.find((p) => p.kind === "front")?.storage_path ?? null,
+      audio_path: r.audio_path ?? null,
+      photos,
+    };
+  });
   return { rows, total: count ?? rows.length };
 }

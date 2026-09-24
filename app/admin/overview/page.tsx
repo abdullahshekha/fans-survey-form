@@ -30,14 +30,17 @@ export default async function AdminOverviewPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="grid grid-cols-3 gap-3">
+      <h1 className="text-xl font-semibold text-slate-900">Overview</h1>
+
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
         <StatTile label="Total surveys" value={stats.totalSurveys} />
         <StatTile label="Active reps" value={activeReps ?? 0} />
         <StatTile label="Markets covered" value={`${stats.marketsCovered} / ${marketNames.length}`} />
       </div>
-      <div>
+
+      <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
         <h2 className="mb-3 text-sm font-semibold text-slate-700">Pak Fans market position (estimate)</h2>
-        <div className="grid grid-cols-3 gap-3">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
           <StatTile accent label="Most-selling share" value={`${(pakFansMostSellingShare * 100).toFixed(1)}%`}
             sublabel={`${mostSelling.find((d) => d.label === PAK_FANS)?.value ?? 0} of ${stats.totalSurveys} surveyed shops`} />
           <StatTile accent label="Est. units / year" value={pakFansEstUnits.toLocaleString()}
@@ -45,12 +48,13 @@ export default async function AdminOverviewPage() {
           <StatTile accent label="Recommendation share" value={`${(shareOf(rec30w1, PAK_FANS, stats.totalSurveys) * 100).toFixed(1)}% / ${(shareOf(rec50w1, PAK_FANS, stats.totalSurveys) * 100).toFixed(1)}%`}
             sublabel="30W / 50W, 1st recommendation" />
         </div>
-        <p className="mt-2 text-xs text-slate-400">
+        <p className="mt-3 text-xs text-slate-400">
           Estimate = citywide most-selling share × an assumed {KARACHI_ANNUAL_FAN_MARKET_UNITS.toLocaleString()}-unit
           Karachi market (external input, not derived from this survey) — a proportional estimate, not a measured figure.
         </p>
       </div>
-      <div className="grid gap-4 md:grid-cols-2">
+
+      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
         <BarChartCard title="Shop count by market" data={countByMarket(surveys, marketNames)} />
         <PieChartCard title="Most selling fan" data={mostSelling} highlightLabel={PAK_FANS} />
         <PieChartCard title="1st recommendation (30W)" data={rec30w1} highlightLabel={PAK_FANS} />

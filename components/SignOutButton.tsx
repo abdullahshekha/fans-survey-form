@@ -7,7 +7,7 @@ export function SignOutButton() {
   return (
     <button
       onClick={async () => { await createBrowserSupabase().auth.signOut(); router.push("/login"); router.refresh(); }}
-      className="text-sm text-slate-500 underline">
+      className="text-left text-sm text-slate-500 hover:text-slate-900">
       Sign out
     </button>
   );

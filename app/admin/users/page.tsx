@@ -12,17 +12,20 @@ export default async function AdminUsersPage() {
 
   return (
     <div className="flex flex-col gap-6">
+      <h1 className="text-xl font-semibold text-slate-900">Users</h1>
       <AddRepForm />
-      <table className="w-full">
-        <thead><tr className="border-b border-slate-200 text-left text-xs uppercase text-slate-500">
-          <th className="py-2">Username</th><th>Name</th><th className="text-center">Surveys</th><th></th>
-        </tr></thead>
-        <tbody>
-          {(reps ?? []).map((r: any) => (
-            <RepRow key={r.id} rep={{ ...r, count: countBy.get(r.id) ?? 0 }} />
-          ))}
-        </tbody>
-      </table>
+      <div className="overflow-x-auto rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+        <table className="w-full text-sm">
+          <thead><tr className="border-b border-slate-200 text-left text-xs font-semibold text-slate-500">
+            <th className="py-2">Username</th><th>Name</th><th>Status</th><th className="text-center">Surveys</th><th></th>
+          </tr></thead>
+          <tbody>
+            {(reps ?? []).map((r: any) => (
+              <RepRow key={r.id} rep={{ ...r, count: countBy.get(r.id) ?? 0 }} />
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }
