@@ -36,13 +36,14 @@ export interface AdminSurveyRow {
   most_selling_fan: string;
   most_selling_fan_other: string | null;
   front_thumb_path: string | null;
+  audio_path: string | null;
 }
 
 export async function getSurveysPage(db: any, f: SurveyFilter): Promise<{ rows: AdminSurveyRow[]; total: number }> {
   const base = db
     .from("surveys")
     .select(
-      "id, created_at, edited_at, shop_name, market, shop_size, most_selling_fan, most_selling_fan_other, profiles!surveys_rep_id_fkey(username), survey_photos(kind, storage_path, sort_order)",
+      "id, created_at, edited_at, shop_name, market, shop_size, most_selling_fan, most_selling_fan_other, audio_path, profiles!surveys_rep_id_fkey(username), survey_photos(kind, storage_path, sort_order)",
       { count: "exact" },
     );
   const { data, count, error } = await buildSurveyQuery(base, f);
@@ -58,6 +59,7 @@ export async function getSurveysPage(db: any, f: SurveyFilter): Promise<{ rows: 
     most_selling_fan: r.most_selling_fan,
     most_selling_fan_other: r.most_selling_fan_other ?? null,
     front_thumb_path: r.survey_photos?.find((p: any) => p.kind === "front")?.storage_path ?? null,
+    audio_path: r.audio_path ?? null,
   }));
   return { rows, total: count ?? rows.length };
 }

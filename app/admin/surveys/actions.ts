@@ -2,10 +2,24 @@
 import { revalidatePath } from "next/cache";
 import { getSessionProfile } from "@/lib/auth";
 import { createAdminSupabase } from "@/lib/supabase/admin";
+import { SIGNED_URL_TTL } from "@/lib/constants";
 
 async function assertAdmin() {
   const p = await getSessionProfile();
   if (!p || p.role !== "admin") throw new Error("Not authorized");
+}
+
+export async function getAudioUrl(surveyId: string): Promise<{ url?: string; error?: string }> {
+  await assertAdmin();
+  const db = createAdminSupabase();
+  const { data: survey, error } = await db.from("surveys").select("audio_path").eq("id", surveyId).single();
+  if (error || !survey?.audio_path) return { error: "No voice note." };
+
+  const { data: signed, error: signError } = await db.storage
+    .from("survey-audio")
+    .createSignedUrl(survey.audio_path, SIGNED_URL_TTL);
+  if (signError || !signed) return { error: "Could not load voice note." };
+  return { url: signed.signedUrl };
 }
 
 async function removeFolder(db: any, bucket: string, prefix: string) {

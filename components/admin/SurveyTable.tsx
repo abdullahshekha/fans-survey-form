@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { brandDisplay, formatDateTime } from "@/lib/format";
 import type { AdminSurveyRow } from "@/lib/adminQueries";
+import { AudioPlayButton } from "./AudioPlayButton";
 
 export function SurveyTable({ rows }: { rows: AdminSurveyRow[] }) {
   if (rows.length === 0) return <p className="text-sm text-slate-500">No surveys match these filters.</p>;
@@ -8,7 +9,7 @@ export function SurveyTable({ rows }: { rows: AdminSurveyRow[] }) {
     <div className="overflow-x-auto">
       <table className="w-full text-sm">
         <thead><tr className="border-b border-slate-200 text-left text-xs uppercase text-slate-500">
-          <th className="py-2">Date</th><th>Rep</th><th>Shop</th><th>Market</th><th>Size</th><th>Most selling</th>
+          <th className="py-2">Date</th><th>Rep</th><th>Shop</th><th>Market</th><th>Size</th><th>Most selling</th><th>Voice note</th>
         </tr></thead>
         <tbody>
           {rows.map((r) => (
@@ -22,6 +23,7 @@ export function SurveyTable({ rows }: { rows: AdminSurveyRow[] }) {
               <td>{r.market}</td>
               <td>{r.shop_size}</td>
               <td>{brandDisplay(r.most_selling_fan, r.most_selling_fan_other)}</td>
+              <td>{r.audio_path ? <AudioPlayButton surveyId={r.id} /> : "—"}</td>
             </tr>
           ))}
         </tbody>
