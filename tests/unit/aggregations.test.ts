@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import {
   countByMarket, countMostSellingFan, countRec30w1, countRec30w2, countRec50w1, countRec50w2, overviewStats,
-  pakFansHoldByMarket,
+  pakFansHoldByMarket, shareOf,
 } from "@/lib/aggregations";
 
 const MARKET_NAMES = [
@@ -95,5 +95,18 @@ describe("pakFansHoldByMarket", () => {
   it("never flags a market with zero surveys", () => {
     const out = pakFansHoldByMarket(rows, ["Z"]);
     expect(out).toEqual([{ market: "Z", n: 0, shareMostSelling: 0, shareRec30w: 0, shareRec50w: 0, betterHold: false }]);
+  });
+});
+
+describe("shareOf", () => {
+  it("returns a label's fraction of the total", () => {
+    const data = [{ label: "Pak Fans", value: 10 }, { label: "Royal", value: 20 }];
+    expect(shareOf(data, "Pak Fans", 126)).toBeCloseTo(10 / 126);
+  });
+
+  it("returns 0 for a missing label or a zero total", () => {
+    const data = [{ label: "Royal", value: 20 }];
+    expect(shareOf(data, "Pak Fans", 126)).toBe(0);
+    expect(shareOf(data, "Royal", 0)).toBe(0);
   });
 });

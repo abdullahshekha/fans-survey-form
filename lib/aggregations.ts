@@ -71,6 +71,13 @@ export function overviewStats(surveys: { market: string }[]): { totalSurveys: nu
   };
 }
 
+/** A brand's share of a Datum[] produced by countMostSellingFan / countRec30w1
+ * / countRec50w1, e.g. for a KPI tile. Returns 0 when the total is 0. */
+export function shareOf(data: Datum[], label: string, total: number): number {
+  if (total <= 0) return 0;
+  return (data.find((d) => d.label === label)?.value ?? 0) / total;
+}
+
 const PAK_FANS = "Pak Fans";
 
 type PakFansSurvey = {

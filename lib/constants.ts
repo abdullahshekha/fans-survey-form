@@ -29,3 +29,8 @@ export const MARKET_COLOR_PALETTE = [
 
 export const KARACHI_CENTER: [number, number] = [24.86, 67.02];
 export const KARACHI_ZOOM = 11;
+
+/** External estimate of Karachi's total annual fan market, in units. Not
+ * derived from survey data — used only to scale a citywide brand share into
+ * an approximate unit figure on the admin overview. */
+export const KARACHI_ANNUAL_FAN_MARKET_UNITS = 1_200_000;

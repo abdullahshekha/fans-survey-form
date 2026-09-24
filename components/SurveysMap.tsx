@@ -53,18 +53,16 @@ const Inner = dynamic(async () => {
         <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
           attribution="&copy; OpenStreetMap contributors" />
         <Fit points={points} />
-        {boundaries.filter((b) => b.boundary).map((b) => (
+        {/* Only OSM-sourced outlines render: with few/scattered survey points a
+            convex hull comes out as a degenerate sliver or spike, which reads
+            as broken rather than approximate. Those markets show markers only. */}
+        {boundaries.filter((b) => b.boundary && b.boundary_source === "osm").map((b) => (
           polygonLatLngs(b.boundary!).map((ring, i) => (
             <Polygon key={`${b.name}-${i}`} positions={ring}
-              pathOptions={{
-                color: b.color, weight: 2, fillOpacity: 0.06,
-                dashArray: b.boundary_source === "field-data" ? "6 5" : undefined,
-              }}>
+              pathOptions={{ color: b.color, weight: 2, fillOpacity: 0.1 }}>
               <Popup>
                 <strong>{b.name}</strong><br />
-                {b.boundary_source === "osm"
-                  ? "Approximate outline (OpenStreetMap boundary)"
-                  : "Approximate outline (from surveyed shop locations)"}
+                Approximate outline (OpenStreetMap boundary)
               </Popup>
             </Polygon>
           ))
@@ -118,8 +116,8 @@ export function SurveysMap({ points, markets, boundaries, betterHoldMarkets }: {
         ))}
       </ul>
       <p className="text-xs text-slate-500">
-        Outlines are approximate: solid = OpenStreetMap boundary, dashed = drawn from surveyed shop locations.
-        {" "}★ marks a market where Pak Fans over-indexes vs. its citywide share.
+        Shaded outlines are approximate OpenStreetMap boundaries, shown where one closely matches the market
+        (not every market has one). ★ marks a market where Pak Fans over-indexes vs. its citywide share.
       </p>
     </div>
   );
