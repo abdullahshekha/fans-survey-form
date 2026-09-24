@@ -59,8 +59,8 @@ export default async function AdminOverviewPage() {
         <PieChartCard title="Most selling fan" data={mostSelling} highlightLabel={PAK_FANS} />
         <PieChartCard title="1st recommendation (30W)" data={rec30w1} highlightLabel={PAK_FANS} />
         <PieChartCard title="1st recommendation (50W)" data={rec50w1} highlightLabel={PAK_FANS} />
-        <BarChartCard title="2nd recommendation (30W)" data={countRec30w2(surveys)} highlightLabel={PAK_FANS} />
-        <BarChartCard title="2nd recommendation (50W)" data={countRec50w2(surveys)} highlightLabel={PAK_FANS} />
+        <PieChartCard title="2nd recommendation (30W)" data={countRec30w2(surveys)} highlightLabel={PAK_FANS} />
+        <PieChartCard title="2nd recommendation (50W)" data={countRec50w2(surveys)} highlightLabel={PAK_FANS} />
       </div>
     </div>
   );

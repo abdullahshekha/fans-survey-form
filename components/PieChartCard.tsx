@@ -25,7 +25,7 @@ export function PieChartCard({
                 <Cell key={d.label} fill={d.label === highlightLabel ? HIGHLIGHT_FILL : PALETTE[i % PALETTE.length]} />
               ))}
             </Pie>
-            <Tooltip formatter={(value: number) => [`${value} (${total ? ((value / total) * 100).toFixed(1) : 0}%)`, ""]} />
+            <Tooltip formatter={(value: number, name: string) => [`${value} (${total ? ((value / total) * 100).toFixed(1) : 0}%)`, name]} />
             <Legend wrapperStyle={{ fontSize: 11 }} />
           </PieChart>
         </ResponsiveContainer>
