@@ -1,6 +1,7 @@
 import { describe, it, expect } from "vitest";
 import {
   countByMarket, countMostSellingFan, countRec30w1, countRec30w2, countRec50w1, countRec50w2, overviewStats,
+  pakFansHoldByMarket,
 } from "@/lib/aggregations";
 
 const MARKET_NAMES = [
@@ -74,5 +75,25 @@ describe("aggregations", () => {
 
   it("overviewStats reports totals and distinct markets", () => {
     expect(overviewStats(surveys)).toEqual({ totalSurveys: 4, marketsCovered: 3 });
+  });
+});
+
+describe("pakFansHoldByMarket", () => {
+  const rows = [
+    { market: "X", most_selling_fan: "Pak Fans", rec_30w_1: "Royal", rec_50w_1: "Royal" },
+    { market: "X", most_selling_fan: "Royal", rec_30w_1: "Royal", rec_50w_1: "Royal" },
+    { market: "Y", most_selling_fan: "Royal", rec_30w_1: "Royal", rec_50w_1: "Royal" },
+    { market: "Y", most_selling_fan: "Royal", rec_30w_1: "Royal", rec_50w_1: "Royal" },
+  ];
+
+  it("flags a market whose Pak Fans share on any metric meets or beats the citywide share", () => {
+    const out = pakFansHoldByMarket(rows, ["X", "Y"]);
+    expect(out.find((r) => r.market === "X")).toMatchObject({ n: 2, shareMostSelling: 0.5, betterHold: true });
+    expect(out.find((r) => r.market === "Y")).toMatchObject({ n: 2, shareMostSelling: 0, betterHold: false });
+  });
+
+  it("never flags a market with zero surveys", () => {
+    const out = pakFansHoldByMarket(rows, ["Z"]);
+    expect(out).toEqual([{ market: "Z", n: 0, shareMostSelling: 0, shareRec30w: 0, shareRec50w: 0, betterHold: false }]);
   });
 });

@@ -45,3 +45,22 @@ describe("storage — rep may edit their own media", () => {
     expect(error).not.toBeNull();
   });
 });
+
+describe("storage — admin may edit any rep's media", () => {
+  it("admin can upload under a rep's own prefix", async () => {
+    const admin = await signInAs("admin@survey.local", "test-pass-123");
+    const path = `${REP1}/editable-test/admin-upload.jpg`;
+    const { error } = await admin.storage.from("survey-photos").upload(path, bytes, { upsert: true });
+    expect(error).toBeNull();
+  });
+
+  it("admin can delete another rep's object", async () => {
+    const other = `${REP2}/editable-test/admin-delete.jpg`;
+    await serviceClient().storage.from("survey-photos").upload(other, bytes, { upsert: true });
+    const admin = await signInAs("admin@survey.local", "test-pass-123");
+    const { error } = await admin.storage.from("survey-photos").remove([other]);
+    expect(error).toBeNull();
+    const { error: dlError } = await serviceClient().storage.from("survey-photos").download(other);
+    expect(dlError).not.toBeNull(); // gone
+  });
+});

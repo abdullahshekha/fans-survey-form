@@ -24,7 +24,7 @@ export default async function SurveyDetailPage({ params }: { params: Promise<{ i
       survey={data as SurveyWithRelations}
       media={media}
       canDelete={profile.role === "admin"}
-      canEdit={profile.id === data.rep_id}
+      canEdit={profile.id === data.rep_id || profile.role === "admin"}
     />
   );
 }

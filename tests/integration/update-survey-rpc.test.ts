@@ -129,6 +129,25 @@ describe("update_survey RPC", () => {
     expect(data?.shop_name).toBe("Al Madina");
   });
 
+  it("lets an admin edit any rep's survey, keeping that rep's untouched photos", async () => {
+    const rep = await signInAs("rep.one@survey.local", "test-pass-123");
+    const id = "11111111-0000-0000-0000-000000000008";
+    await seedSurvey(rep, id);
+    const admin = await signInAs("admin@survey.local", "test-pass-123");
+    const { error } = await admin.rpc("update_survey", {
+      payload: createPayload(id, { shop_name: "Fixed by admin" }),
+    });
+    expect(error).toBeNull();
+    const { data } = await serviceClient().from("surveys")
+      .select("shop_name, rep_id, edited_at").eq("id", id).single();
+    expect(data?.shop_name).toBe("Fixed by admin");
+    expect(data?.rep_id).toBe(REP1);
+    expect(data?.edited_at).not.toBeNull();
+    const { data: photos } = await serviceClient().from("survey_photos")
+      .select("storage_path").eq("survey_id", id);
+    expect(photos?.every((p) => p.storage_path.startsWith(`${REP1}/${id}/`))).toBe(true);
+  });
+
   it("does not let a deactivated rep edit their own survey", async () => {
     const rep = await signInAs("rep.one@survey.local", "test-pass-123");
     const id = "11111111-0000-0000-0000-000000000007";

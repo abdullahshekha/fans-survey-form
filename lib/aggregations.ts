@@ -70,3 +70,50 @@ export function overviewStats(surveys: { market: string }[]): { totalSurveys: nu
     marketsCovered: new Set(surveys.map((s) => s.market).filter(Boolean)).size,
   };
 }
+
+const PAK_FANS = "Pak Fans";
+
+type PakFansSurvey = {
+  market: string;
+  most_selling_fan: string | null;
+  rec_30w_1: string | null;
+  rec_50w_1: string | null;
+};
+
+export type PakFansHold = {
+  market: string;
+  n: number;
+  shareMostSelling: number;
+  shareRec30w: number;
+  shareRec50w: number;
+  betterHold: boolean;
+};
+
+/** A market "has a better hold" for Pak Fans when its local share of Pak Fans
+ * mentions — on most-selling, 30W recommendation, or 50W recommendation —
+ * meets or beats Pak Fans' citywide share on that same metric. Pak Fans
+ * rarely outright leads any single market in this dataset, so plurality
+ * would surface almost nothing; comparing against the citywide baseline
+ * instead highlights markets where the brand over-indexes. */
+export function pakFansHoldByMarket(surveys: PakFansSurvey[], marketNames: readonly string[]): PakFansHold[] {
+  const cityTotal = surveys.length || 1;
+  const cityShare = (field: keyof PakFansSurvey) =>
+    surveys.filter((s) => s[field] === PAK_FANS).length / cityTotal;
+  const cityMostSelling = cityShare("most_selling_fan");
+  const cityRec30w = cityShare("rec_30w_1");
+  const cityRec50w = cityShare("rec_50w_1");
+
+  return marketNames.map((market) => {
+    const rows = surveys.filter((s) => s.market === market);
+    const n = rows.length || 1;
+    const shareMostSelling = rows.filter((s) => s.most_selling_fan === PAK_FANS).length / n;
+    const shareRec30w = rows.filter((s) => s.rec_30w_1 === PAK_FANS).length / n;
+    const shareRec50w = rows.filter((s) => s.rec_50w_1 === PAK_FANS).length / n;
+    const betterHold =
+      rows.length > 0 &&
+      (shareMostSelling >= cityMostSelling && shareMostSelling > 0 ||
+        shareRec30w >= cityRec30w && shareRec30w > 0 ||
+        shareRec50w >= cityRec50w && shareRec50w > 0);
+    return { market, n: rows.length, shareMostSelling, shareRec30w, shareRec50w, betterHold };
+  });
+}

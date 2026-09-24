@@ -7,3 +7,19 @@ export async function getMarkets(supabase: SupabaseClient): Promise<MarketOption
   if (error) throw error;
   return (data ?? []) as MarketOption[];
 }
+
+export type MarketBoundary = {
+  name: string;
+  color: string;
+  boundary: GeoJSON.Polygon | GeoJSON.MultiPolygon | null;
+  boundary_source: "osm" | "field-data" | null;
+};
+
+export async function getMarketBoundaries(supabase: SupabaseClient): Promise<MarketBoundary[]> {
+  const { data, error } = await supabase
+    .from("markets")
+    .select("name, color, boundary, boundary_source")
+    .order("sort_order");
+  if (error) throw error;
+  return (data ?? []) as MarketBoundary[];
+}

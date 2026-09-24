@@ -19,8 +19,8 @@ export default async function EditSurveyPage({ params }: { params: Promise<{ id:
     .single();
   if (error || !data) notFound();
 
-  // Owner rep only. Admin editing is out of scope for this feature.
-  if (data.rep_id !== profile.id) notFound();
+  // The owning rep or an admin may edit.
+  if (data.rep_id !== profile.id && profile.role !== "admin") notFound();
 
   const signed = await getSignedMediaUrls(id);
   const markets = await getMarkets(supabase);

@@ -19,26 +19,31 @@ surveys, per-rep counts, filters, CSV/XLSX export, a map, and comparison charts.
 
 - **Live on Vercel**, deployed from the `master` branch (every push to `master`
   auto-deploys). Default branch is `master`, not `main`.
-- Backed by a hosted Supabase project. Migrations `0001`–`0006` are applied
-  (`0006` was run via the Supabase SQL Editor, so it is **not** in
-  `supabase_migrations.schema_migrations` — same caveat as `0005`, see below);
-  buckets exist and are private; an admin account is seeded. `0007_markets_table.sql`
-  (admin-managed markets) is written and committed but **not yet applied to
-  hosted** — apply it per `docs/DEPLOYMENT.md` Step 2d before deploying this
-  feature's app code.
-- **Verified:** `npm test` (127 unit tests), `npx tsc --noEmit`, `npm run build`.
+- Backed by a hosted Supabase project. Migrations `0001`–`0007` are applied
+  (`0005`–`0006` were run via the Supabase SQL Editor, so they are **not** in
+  `supabase_migrations.schema_migrations` — see below); buckets exist and are
+  private; an admin account is seeded; `markets` is live with its 12 seeded
+  rows. `0008_admin_survey_edit.sql` (admin may edit any survey) and
+  `0009_market_boundaries.sql` (approximate market outlines for the map) are
+  written and committed but **not yet applied to hosted** — apply both via the
+  Supabase SQL Editor (same pattern as `0005`/`0006`, see below) before
+  relying on admin survey editing or the map's outlines/star markers in
+  production.
+- **Verified:** `npm test` (133 unit tests), `npx tsc --noEmit`, `npm run build`.
   Manual end-to-end (rep submits a survey → admin sees it) was verified on the
-  live URL before the markets-management work; re-verify after `0007` ships.
+  live URL before the markets-management work; re-verify after `0008`/`0009` ship.
 - **Not yet run:** `npm run test:integration` and `npm run e2e` — the suites are
   written but have never executed against a real Supabase. Higher value now that
-  `0006` adds the `update_survey` RPC and the rep-edit RLS/storage policies, and
-  `0007` adds the `markets` table RLS + rename-cascade behavior.
+  `0006` adds the `update_survey` RPC and the rep-edit RLS/storage policies,
+  `0007` adds the `markets` table RLS + rename-cascade behavior, and `0008`
+  adds the admin-edit storage policies and widens `update_survey`'s photo-path
+  check.
 - **Known follow-up:** a migration should add a `profiles.active` check to the
   six `0006` rep policies on `survey_photos` / `storage.objects` — today a
   deactivated rep can still delete their own media via a direct API call (the
   `update_survey` RPC path is already active-gated; this is the direct-call
-  gap). This was previously numbered `0007`; since `0007` is now the markets
-  migration, this follow-up becomes `0008` whenever it's implemented.
+  gap). This becomes `0010` whenever it's implemented (`0008`/`0009` are now
+  taken by admin survey editing and market boundaries).
 
 ## Stack
 
@@ -69,6 +74,14 @@ surveys, per-rep counts, filters, CSV/XLSX export, a map, and comparison charts.
   `rep_id = auth.uid()` / the caller's own object prefix and all re-checking
   `profiles.active`. Reps still **cannot** touch another rep's data, reassign
   `rep_id`, or **delete a survey** — only the admin deletes.
+- **Admin may also edit any survey** (`0008`), via the same `/survey/[id]/edit`
+  page and `update_survey` RPC — the DB-level `surveys_admin_update` /
+  `survey_photos_admin_write` policies (0002) already covered the table rows;
+  `0008` added the missing storage INSERT/DELETE policies for admin on both
+  media buckets, and widened `update_survey`'s photo-path check to accept a
+  photo under either the caller's own uid prefix (freshly uploaded) or the
+  survey's original `rep_id` prefix (kept as-is), so saving doesn't require
+  re-uploading every rep-owned photo.
 - **Deactivating a rep must bind at the DB layer.** `surveys_rep_insert` checks
   `profiles.active`; `is_admin()` checks `active`; middleware re-checks every
   request. Do not weaken any of these.
@@ -86,7 +99,19 @@ surveys, per-rep counts, filters, CSV/XLSX export, a map, and comparison charts.
   market (`app/admin/housekeeping/actions.ts`'s `addMarket`/`renameMarket`,
   RLS-gated by `is_admin()`); any authenticated user can read the list. A new
   market's color auto-assigns from `MARKET_COLOR_PALETTE` in
-  `lib/constants.ts`.
+  `lib/constants.ts`. `markets.boundary` / `boundary_source` (`0009`) hold an
+  optional GeoJSON outline per market — `'osm'` (an OpenStreetMap boundary,
+  only when its bounding-box diagonal is ≤12 km, else it's rejected as too
+  coarse) or `'field-data'` (a convex hull of that market's own survey GPS
+  points, drawn dashed). Both are approximate and labeled as such on
+  `/admin/map`; a market added later by the admin has `boundary = null` and
+  just shows markers, no outline. Fetched only by `lib/markets.ts`'s
+  `getMarketBoundaries()` (kept separate from `getMarkets()` so every other
+  caller isn't paying for the GeoJSON payload). The map also stars a market
+  where `lib/aggregations.ts`'s `pakFansHoldByMarket()` finds Pak Fans'
+  local share (most-selling, 30W rec., or 50W rec.) at or above its citywide
+  share — Pak Fans rarely outright leads a market in this dataset, so this
+  compares against the citywide baseline instead of plurality.
 - **Other fixed lists still live in one place** (`lib/constants.ts`) and are
   mirrored by Postgres `CHECK` constraints. Brands: Tamoor, Khurshid, SK, GFC,
   Royal, Pak Fans, Lahore Fans, plus the free-text `"Other"` option. A brand
@@ -122,7 +147,7 @@ lib/         supabase clients, constants, validation, geo, compression, audio,
             uploadEditedMedia, upload, markets,
             format (date + `brandDisplay` — folds an `'Other'` brand's typed name)
 middleware.ts  auth + role + active-account route protection
-supabase/   migrations/ (0001–0007), seed.sql (local dev only), config.toml
+supabase/   migrations/ (0001–0009), seed.sql (local dev only), config.toml
 scripts/    seed-admin.ts
 tests/      unit/ (vitest, run), integration/ + e2e/ (authored, not yet run)
 ```
@@ -155,15 +180,21 @@ Local dev reads `.env.local` (git-ignored). `npm run dev` loads it automatically
   exists` before each `create policy`, `create or replace function`). `0007`
   (admin-managed markets) is idempotent-guarded (`create table if not exists`,
   `on conflict do nothing`, `drop constraint/policy if exists` before
-  recreating). For any further schema change add a new numbered migration
-  (e.g., `0008_*.sql`) — do not edit an applied file. Migrations are
-  append-only.
+  recreating). `0008` (admin may edit any survey) is idempotent-guarded
+  (`drop policy if exists` before each `create policy`, `create or replace
+  function`). `0009` (market boundaries) is idempotent-guarded (`add column
+  if not exists`; every `update` is unconditional, so a re-run just
+  re-applies the same boundary snapshot). For any further schema change add a
+  new numbered migration (e.g., `0010_*.sql`) — do not edit an applied file.
+  Migrations are append-only.
 - **`0005` and `0006` were applied to hosted via the Supabase SQL Editor,** which
   does not record them in `supabase_migrations.schema_migrations`. Before ever
   running `supabase db push` against the hosted project, insert **both** rows
   (see `docs/DEPLOYMENT.md` Steps 2b / 2c) or `db push` will re-run `0005` and
   `0006`. Both are idempotent-guarded, so a re-run is harmless, but the ledger
-  should still be synced.
+  should still be synced. `0008` and `0009` are not yet applied to hosted at
+  all — apply them the same way (Supabase SQL Editor) and insert their ledger
+  rows too before any future `db push`.
 
 ## Testing
 
